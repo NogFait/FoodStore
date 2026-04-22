@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import type { Producto } from "../../types/producto";
 import type { Categoria } from "../../types/categoria";
+import type { Ingrediente } from "../../types/ingrediente";
 import FormAlert from "../FormAlert/FormAlert";
 
 type ProductoModalProps = {
@@ -9,10 +10,11 @@ type ProductoModalProps = {
   onClose: () => void;
   onSubmit: (data: Omit<Producto, "id">) => void;
   categorias: Categoria[];
+  ingredientes: Ingrediente[];
    
 };
 
-const ProductoModal = ({ isOpen, producto, onClose, onSubmit, categorias }: ProductoModalProps) => {
+const ProductoModal = ({ isOpen, producto, onClose, onSubmit, categorias, ingredientes }: ProductoModalProps) => {
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [precioBase, setPrecioBase] = useState("");
@@ -20,6 +22,7 @@ const ProductoModal = ({ isOpen, producto, onClose, onSubmit, categorias }: Prod
   
   const [imagenUrl, setImagenUrl] = useState("");
   const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<number[]>([]);
+  const [ingredientesSeleccionados, setIngredientesSeleccionados] = useState<number[]>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -30,6 +33,7 @@ const ProductoModal = ({ isOpen, producto, onClose, onSubmit, categorias }: Prod
       setStockCantidad(producto.stock_cantidad.toString());
       setImagenUrl(producto.imagenes_url || "");
       setCategoriasSeleccionadas(producto.categorias_ids);
+      setIngredientesSeleccionados(producto.ingredientes_ids || []);
     } else {
       setNombre("");
       setDescripcion("");
@@ -37,6 +41,7 @@ const ProductoModal = ({ isOpen, producto, onClose, onSubmit, categorias }: Prod
       setStockCantidad("0");
       setImagenUrl("");
       setCategoriasSeleccionadas([]);
+      setIngredientesSeleccionados([]);
     }
     setError("");
   }, [producto, isOpen]);
@@ -65,8 +70,10 @@ const ProductoModal = ({ isOpen, producto, onClose, onSubmit, categorias }: Prod
       descripcion,
       precio_base: parseFloat(precioBase),
       stock_cantidad: parseInt(stockCantidad) || 0,
+      disponible: true,
       imagenes_url: imagenUrl || undefined,
       categorias_ids: categoriasSeleccionadas,
+      ingredientes_ids: ingredientesSeleccionados,
     });
   };
 
@@ -177,6 +184,50 @@ const ProductoModal = ({ isOpen, producto, onClose, onSubmit, categorias }: Prod
               {categoriasSeleccionadas.length === 0 && (
                 <p className="text-xs text-gray-400 mt-2">
                   Seleccioná una o más categorías
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Ingredientes</label>
+              <div className="flex flex-wrap gap-2">
+                {ingredientes.map((ing) => {
+                  const isSelected = ingredientesSeleccionados.includes(ing.id);
+                  return (
+                    <button
+                      key={ing.id}
+                      type="button"
+                      onClick={() => {
+                        if (isSelected) {
+                          setIngredientesSeleccionados(
+                            ingredientesSeleccionados.filter((id) => id !== ing.id)
+                          );
+                        } else {
+                          setIngredientesSeleccionados([
+                            ...ingredientesSeleccionados,
+                            ing.id,
+                          ]);
+                        }
+                      }}
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border ${
+                        isSelected
+                          ? ing.es_alergeno
+                            ? "bg-amber-500 text-white border-amber-500 shadow-md"
+                            : "bg-green-600 text-white border-green-600 shadow-md"
+                          : ing.es_alergeno
+                            ? "bg-amber-100 text-amber-700 border-amber-300 hover:border-amber-500 hover:bg-amber-50"
+                            : "bg-green-50 text-green-700 border-green-300 hover:border-green-500 hover:bg-green-50"
+                      }`}
+                    >
+                      {ing.nombre}
+                      {ing.es_alergeno && " ⚠️"}
+                    </button>
+                  );
+                })}
+              </div>
+              {ingredientesSeleccionados.length === 0 && (
+                <p className="text-xs text-gray-400 mt-2">
+                  Seleccioná uno o más ingredientes
                 </p>
               )}
             </div>

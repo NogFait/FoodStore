@@ -6,6 +6,7 @@ from app.producto.model import Producto
 from app.producto.schema import ProductoCreate, ProductoUpdate, ProductoResponse
 from app.producto.unit_of_work import ProductoUnitOfWork
 from app.categoria.model import Categoria
+from app.ingrediente.model import Ingrediente
 from datetime import datetime
 
 
@@ -36,6 +37,14 @@ class ProductoService:
                 )
                 producto.categorias = categorias
 
+            if hasattr(data, "ingredientes_ids") and data.ingredientes_ids:
+                ingredientes = list(
+                    uow.session.exec(
+                        select(Ingrediente).where(Ingrediente.id.in_(data.ingredientes_ids))
+                    ).all()
+                )
+                producto.ingredientes = ingredientes
+
             uow.productos.add(producto)
             return ProductoResponse.model_validate(producto)
 
@@ -62,13 +71,22 @@ class ProductoService:
             if "categorias_ids" in update_data:
                 categorias_ids = update_data.pop("categorias_ids")
                 if categorias_ids is not None:
-                    from app.categoria.model import Categoria
                     categorias = list(
                         uow.session.exec(
                             select(Categoria).where(Categoria.id.in_(categorias_ids))
                         ).all()
                     )
                     producto.categorias = categorias
+
+            if "ingredientes_ids" in update_data:
+                ingredientes_ids = update_data.pop("ingredientes_ids")
+                if ingredientes_ids is not None:
+                    ingredientes = list(
+                        uow.session.exec(
+                            select(Ingrediente).where(Ingrediente.id.in_(ingredientes_ids))
+                        ).all()
+                    )
+                    producto.ingredientes = ingredientes
 
             for field, value in update_data.items():
                 setattr(producto, field, value)

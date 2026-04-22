@@ -49,6 +49,16 @@ const ProductosPage = () => {
     staleTime: 10000 * 60,
   });
 
+  const getIngredientes = async () => {
+    return fetchApi<any[]>("/ingredientes/", { limit: 100 });
+  };
+
+  const { data: ingredientes } = useQuery({
+    queryKey: ["ingredientes"],
+    queryFn: getIngredientes,
+    staleTime: 10000 * 60,
+  });
+
 
   const createMutation = useMutation({
     mutationFn: async (data: Omit<Producto, "id">) => {
@@ -56,6 +66,8 @@ const ProductosPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["productos"] });
+      queryClient.invalidateQueries({ queryKey: ["categorias"] });
+      queryClient.invalidateQueries({ queryKey: ["ingredientes"] });
       setModal({ type: "none" });
     },
   });
@@ -75,6 +87,8 @@ const ProductosPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["productos"] });
+      queryClient.invalidateQueries({ queryKey: ["categorias"] });
+      queryClient.invalidateQueries({ queryKey: ["ingredientes"] });
       setModal({ type: "none" });
     },
   });
@@ -215,6 +229,7 @@ const ProductosPage = () => {
           <ProductoList
             productos={data}
             categorias={categorias || []}
+            ingredientes={ingredientes || []}
             onEdit={handleEdit}
             onDelete={handleDelete}
             onView={handleView}
@@ -222,14 +237,15 @@ const ProductosPage = () => {
         )}
       </div>
 
-      {/* Modal: CREATE */}
+{/* Modal: CREATE */}
       {modal.type === "create" && (
         <ProductoModal
         isOpen={modal.type === "create"} 
           producto={null}
           onClose={handleCloseModal}
           onSubmit={handleCreate}
-          categorias={categorias || []} 
+          categorias={categorias || []}
+          ingredientes={ingredientes || []}
         />
       )}
 
@@ -240,15 +256,17 @@ const ProductosPage = () => {
           producto={modal.producto}
           onClose={handleCloseModal}
           onSubmit={(data) => handleUpdate(modal.producto.id, data)} 
-          categorias={categorias || []} 
+          categorias={categorias || []}
+          ingredientes={ingredientes || []}
         />
       )}
 
-      {/* Modal: DETAIL */}
+{/* Modal: DETAIL */}
       {modal.type === "detail" && (
         <ProductoDetailModal
           producto={modal.producto}
           categorias={categorias || []}
+          ingredientes={ingredientes || []}
           onClose={handleCloseModal}
         />
       )}

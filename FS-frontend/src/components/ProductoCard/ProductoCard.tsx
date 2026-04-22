@@ -1,20 +1,33 @@
 import type { Producto } from "../../types/producto";
 import type { Categoria } from "../../types/categoria";
+import type { Ingrediente } from "../../types/ingrediente";
 
 type ProductoCardProps = {
   producto: Producto;
   categorias: Categoria[];
+  ingredientes: Ingrediente[];
   onEdit: (producto: Producto) => void;
   onDelete: (id: number) => void;
   onView: (producto: Producto) => void;
 };
 
-const ProductoCard = ({ producto, categorias, onEdit, onDelete, onView }: ProductoCardProps) => {
-  // Obtener nombres de categorías a partir de los IDs
+const ProductoCard = ({ producto, categorias, ingredientes, onEdit, onDelete, onView }: ProductoCardProps) => {
+  // Obtener nombres de categorías
   const nombresCategorias = producto.categorias_ids
     .map((id) => categorias.find((cat) => cat.id === id)?.nombre)
     .filter(Boolean)
     .join(", ");
+
+  // Obtener nombres de ingredientes
+  const nombresIngredientes = producto.ingredientes_ids
+    ?.map((id) => ingredientes.find((ing) => ing.id === id)?.nombre)
+    .filter(Boolean)
+    .join(", ");
+
+  // Verificar si tiene alérgenos
+  const tieneAlergenOS = producto.ingredientes_ids?.some(
+    (id) => ingredientes.find((ing) => ing.id === id)?.es_alergeno
+  );
 
   return (
     <tr className="bg-white hover:bg-indigo-50 transition-colors duration-200">
@@ -28,7 +41,10 @@ const ProductoCard = ({ producto, categorias, onEdit, onDelete, onView }: Produc
         {nombresCategorias || "-"}
       </td>
       <td className="px-6 py-4 text-sm text-gray-600">
-        {producto.descripcion}
+        {nombresIngredientes || "-"}
+        {tieneAlergenOS && (
+          <span className="ml-1 text-amber-500" title="Contiene alérgenos">⚠️</span>
+        )}
       </td>
       <td className="px-6 py-4 text-sm font-medium text-green-600">
         ${producto.precio_base.toFixed(2)}

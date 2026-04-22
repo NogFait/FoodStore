@@ -34,3 +34,7 @@ class Producto(SQLModel, table=True):
     @property
     def categorias_ids(self) -> List[int]:
         return [cat.id for cat in self.categorias] if self.categorias else []
+
+    @property
+    def ingredientes_ids(self) -> List[int]:
+        return [ing.id for ing in self.ingredientes] if self.ingredientes else []

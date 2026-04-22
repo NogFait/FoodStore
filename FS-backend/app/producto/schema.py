@@ -10,6 +10,7 @@ class ProductoBase(SQLModel):
     stock_cantidad: int = Field(default=0, ge=0)
     disponible: bool = True
     categorias_ids: List[int] = []
+    ingredientes_ids: List[int] = [] 
 
 class ProductoCreate(ProductoBase):
     pass
@@ -25,3 +26,4 @@ class ProductoUpdate(SQLModel):
     stock_cantidad: Optional[int] = Field(default=None, ge=0)
     disponible: Optional[bool] = None
     categorias_ids: Optional[List[int]] = None
+    ingredientes_ids: Optional[List[int]] = None

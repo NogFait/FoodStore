@@ -1,18 +1,33 @@
 import type { Producto } from "../../types/producto";
 import type { Categoria } from "../../types/categoria";
+import type { Ingrediente } from "../../types/ingrediente";
 
 type ProductoDetailModalProps = {
   producto: Producto;
   categorias: Categoria[];
+  ingredientes: Ingrediente[];
   onClose: () => void;
 };
 
-const ProductoDetailModal = ({ producto, categorias, onClose }: ProductoDetailModalProps) => {
+const ProductoDetailModal = ({ producto, categorias, ingredientes, onClose }: ProductoDetailModalProps) => {
   // Obtener nombres de categorías
   const nombresCategorias = producto.categorias_ids
     .map((id) => categorias.find((cat) => cat.id === id)?.nombre)
     .filter(Boolean)
     .join(", ");
+
+  // Obtener nombres de ingredientes
+  const nombresIngredientes = producto.ingredientes_ids
+    .map((id) => ingredientes.find((ing) => ing.id === id)?.nombre)
+    .filter(Boolean)
+    .join(", ");
+
+  // Obtener ingredientes alérgenos
+  const ingredientesAlergen = producto.ingredientes_ids
+    .filter((id) => ingredientes.find((ing) => ing.id === id)?.es_alergeno)
+    .map((id) => ingredientes.find((ing) => ing.id === id)?.nombre)
+    .filter(Boolean);
+
   return (
     <div 
       className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
@@ -37,20 +52,6 @@ const ProductoDetailModal = ({ producto, categorias, onClose }: ProductoDetailMo
             </svg>
           </button>
         </div>
-
-        {/* Imagen */}
-        {producto.imagenes_url && (
-          <div className="w-full h-48 bg-gray-100 flex items-center justify-center flex-shrink-0 p-2">
-            <img 
-              src={producto.imagenes_url} 
-              alt={producto.nombre}
-              className="max-w-full max-h-full object-contain rounded"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
-          </div>
-        )}
 
         {/* Contenido */}
         <div className="p-6 overflow-y-auto flex-1">
@@ -78,6 +79,21 @@ const ProductoDetailModal = ({ producto, categorias, onClose }: ProductoDetailMo
               <p className="text-gray-700">
                 {producto.categorias_ids.length > 0 ? nombresCategorias : "Sin categorías"}
               </p>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-4">
+              <p className="text-xs text-gray-500 uppercase font-medium mb-1">Ingredientes</p>
+              <p className="text-gray-700">
+                {producto.ingredientes_ids?.length > 0 ? nombresIngredientes : "Sin ingredientes"}
+              </p>
+              {ingredientesAlergen.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {ingredientesAlergen.map((nombre) => (
+                    <span key={nombre} className="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded-full font-medium">
+                      ⚠️ Alérgeno: {nombre}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
