@@ -31,6 +31,8 @@ class Producto(SQLModel, table=True):
     updated_at: Optional[datetime] = None
     deleted_at: Optional[datetime] = None
 
+
+
     @property
     def categorias_ids(self) -> List[int]:
         return [cat.id for cat in self.categorias] if self.categorias else []
