@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Generic, TypeVar, Type, Sequence
 from sqlmodel import Session, SQLModel, select
 
@@ -10,12 +11,16 @@ class BaseRepository(Generic[ModelT]):
         self.model = model
 
     def get_by_id(self, record_id: int) -> ModelT | None:
-        return self.session.get(self.model, record_id)
+        instance = self.session.get(self.model, record_id)
+        if instance and hasattr(instance, 'deleted_at') and instance.deleted_at is not None:
+            return None
+        return instance
 
     def get_all(self, offset: int = 0, limit: int = 20) -> Sequence[ModelT]:
-        return self.session.exec(
-            select(self.model).offset(offset).limit(limit)
-        ).all()
+        stmt = select(self.model)
+        if hasattr(self.model, 'deleted_at'):
+            stmt = stmt.where(self.model.deleted_at.is_(None))
+        return stmt.offset(offset).limit(limit).all()
 
     def add(self, instance: ModelT) -> ModelT:
         self.session.add(instance)
@@ -24,5 +29,9 @@ class BaseRepository(Generic[ModelT]):
         return instance
 
     def delete(self, instance: ModelT) -> None:
-        self.session.delete(instance)
+        if hasattr(instance, 'deleted_at'):
+            instance.deleted_at = datetime.now()
+            self.session.add(instance)
+        else:
+            self.session.delete(instance)
         self.session.flush()

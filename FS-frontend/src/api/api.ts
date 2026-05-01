@@ -28,8 +28,9 @@ export async function fetchApi<T>(
   const options: FetchOptions = {};
 
   if (paramsOrOptions && "method" in paramsOrOptions) {
-    options.method = paramsOrOptions.method;
-    options.body = paramsOrOptions.body;
+    const opts = paramsOrOptions as FetchOptions;
+    options.method = opts.method;
+    options.body = opts.body;
   } else if (paramsOrOptions) {
     url += buildQueryString(paramsOrOptions as QueryParams);
   }

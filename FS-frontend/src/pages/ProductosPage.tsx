@@ -5,7 +5,7 @@ import type { Producto } from "../types/producto";
 import ProductoModal from "../components/ProductoModal/ProductoModal";
 import ProductoDetailModal from "../components/ProductoDetailModal/ProductoDetailModal";
 import ConfirmModal from "../components/ConfirmModal/ConfirmModal";
-import { fetchApi, type QueryParams } from "../lib/api";
+import { getProductos, createProducto, updateProducto, deleteProducto, getCategorias, getIngredientes } from "../services/productoService";
 
 type ModalState =
   | { type: "none" }
@@ -24,46 +24,31 @@ const ProductosPage = () => {
     disponible: undefined as boolean | undefined,
   });
 
-  const getProductos = async () => {
-    const params: QueryParams = {
-      skip: pagination.skip,
-      limit: pagination.limit,
-      disponible: pagination.disponible,
-    };
-    return fetchApi<Producto[]>("/productos/", params);
-  };
-
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["productos", pagination],
-    queryFn: getProductos,
+    queryFn: () =>
+      getProductos({
+        skip: pagination.skip,
+        limit: pagination.limit,
+        disponible: pagination.disponible,
+      }),
     staleTime: 10000 * 60,
   });
-
-  const getCategorias = async () => {
-    return fetchApi<any[]>("/categorias/", { limit: 100 });
-  };
 
   const { data: categorias } = useQuery({
     queryKey: ["categorias"],
-    queryFn: getCategorias,
+    queryFn: () => getCategorias({ limit: 100 }),
     staleTime: 10000 * 60,
   });
-
-  const getIngredientes = async () => {
-    return fetchApi<any[]>("/ingredientes/", { limit: 100 });
-  };
 
   const { data: ingredientes } = useQuery({
     queryKey: ["ingredientes"],
-    queryFn: getIngredientes,
+    queryFn: () => getIngredientes({ limit: 100 }),
     staleTime: 10000 * 60,
   });
 
-
   const createMutation = useMutation({
-    mutationFn: async (data: Omit<Producto, "id">) => {
-      return fetchApi<Producto>("/productos/", { method: "POST", body: JSON.stringify(data) });
-    },
+    mutationFn: (data: Omit<Producto, "id">) => createProducto(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["productos"] });
       queryClient.invalidateQueries({ queryKey: ["categorias"] });
@@ -73,18 +58,15 @@ const ProductosPage = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      return fetchApi<void>(`/productos/${id}`, { method: "DELETE" });
-    },
+    mutationFn: (id: number) => deleteProducto(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["productos"] });
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Omit<Producto, "id"> }) => {
-      return fetchApi<Producto>(`/productos/${id}`, { method: "PATCH", body: JSON.stringify(data) });
-    },
+    mutationFn: ({ id, data }: { id: number; data: Omit<Producto, "id"> }) =>
+      updateProducto(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["productos"] });
       queryClient.invalidateQueries({ queryKey: ["categorias"] });
@@ -93,10 +75,10 @@ const ProductosPage = () => {
     },
   });
 
-  // Handlers
-  const handleCloseModal = ()=>{
-    setModal({type: "none"})
-  }
+  const handleCloseModal = () => {
+    setModal({ type: "none" });
+  };
+
   const handleCreate = (data: Omit<Producto, "id">) => {
     createMutation.mutate(data);
   };
@@ -124,7 +106,6 @@ const ProductosPage = () => {
     }
   };
 
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -136,7 +117,7 @@ const ProductosPage = () => {
             </p>
           </div>
           <button
-            onClick={() => setModal({type: "create"})}
+            onClick={() => setModal({ type: "create" })}
             className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -228,10 +209,9 @@ const ProductosPage = () => {
         )}
       </div>
 
-{/* Modal: CREATE */}
       {modal.type === "create" && (
         <ProductoModal
-        isOpen={modal.type === "create"} 
+          isOpen={modal.type === "create"}
           producto={null}
           onClose={handleCloseModal}
           onSubmit={handleCreate}
@@ -240,19 +220,17 @@ const ProductosPage = () => {
         />
       )}
 
-      {/* Modal: EDIT */}
       {modal.type === "edit" && (
         <ProductoModal
-          isOpen={modal.type === "edit"} 
+          isOpen={modal.type === "edit"}
           producto={modal.producto}
           onClose={handleCloseModal}
-          onSubmit={(data) => handleUpdate(modal.producto.id, data)} 
+          onSubmit={(data) => handleUpdate(modal.producto.id, data)}
           categorias={categorias || []}
           ingredientes={ingredientes || []}
         />
       )}
 
-{/* Modal: DETAIL */}
       {modal.type === "detail" && (
         <ProductoDetailModal
           producto={modal.producto}
@@ -262,7 +240,6 @@ const ProductosPage = () => {
         />
       )}
 
-      {/* Modal: CONFIRM DELETE */}
       {modal.type === "confirm-delete" && (
         <ConfirmModal
           isOpen={true}

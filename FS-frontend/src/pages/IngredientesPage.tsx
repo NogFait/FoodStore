@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import IngredienteList from "../components/IngredienteList/IngredienteList";
 import IngredienteModal from "../components/IngredienteModal/IngredienteModal";
 import IngredienteDetailModal from "../components/IngredienteDetailModal/IngredienteDetailModal";
 import ConfirmModal from "../components/ConfirmModal/ConfirmModal";
 import type { Ingrediente } from "../types/ingrediente";
-import { fetchApi } from "../lib/api";
+import { getIngredientes, createIngrediente, updateIngrediente, deleteIngrediente } from "../services/ingredienteService";
 
 type ModalState =
   | { type: "none" }
@@ -24,27 +24,19 @@ const IngredientesPage = () => {
     es_alergeno: undefined as boolean | undefined,
   });
 
-  const getIngredientes = async () => {
-    return fetchApi<Ingrediente[]>("/ingredientes/", {
-      skip: pagination.skip,
-      limit: pagination.limit,
-      es_alergeno: pagination.es_alergeno,
-    });
-  };
-
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["ingredientes", pagination],
-    queryFn: getIngredientes,
+    queryFn: () =>
+      getIngredientes({
+        skip: pagination.skip,
+        limit: pagination.limit,
+        es_alergeno: pagination.es_alergeno,
+      }),
     staleTime: 10000 * 60,
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data: Omit<Ingrediente, "id">) => {
-      return fetchApi<Ingrediente>("/ingredientes/", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
-    },
+    mutationFn: (data: Omit<Ingrediente, "id">) => createIngrediente(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ingredientes"] });
       setModal({ type: "none" });
@@ -52,12 +44,8 @@ const IngredientesPage = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Omit<Ingrediente, "id"> }) => {
-      return fetchApi<Ingrediente>(`/ingredientes/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      });
-    },
+    mutationFn: ({ id, data }: { id: number; data: Omit<Ingrediente, "id"> }) =>
+      updateIngrediente(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ingredientes"] });
       setModal({ type: "none" });
@@ -65,9 +53,7 @@ const IngredientesPage = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      return fetchApi<void>(`/ingredientes/${id}`, { method: "DELETE" });
-    },
+    mutationFn: (id: number) => deleteIngrediente(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ingredientes"] });
     },

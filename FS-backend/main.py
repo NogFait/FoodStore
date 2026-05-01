@@ -6,9 +6,7 @@ from app.core.database import engine
 # Importamos el router de categorías (donde están los endpoints)
 from app.categoria.router import router_categoria
 from app.producto.router import router_producto
-from app.producto_categoria.router import router_producto_categoria
 from app.ingrediente.router import router_ingrediente
-from app.producto_ingrediente.router import router_producto_ingrediente
 
 
 # Creamos la instancia principal de la aplicación FastAPI
@@ -50,5 +48,3 @@ app.add_middleware(
 app.include_router(router_categoria)
 app.include_router(router_producto)
 app.include_router(router_ingrediente)
-app.include_router(router_producto_ingrediente)
-app.include_router(router_producto_categoria)

@@ -10,6 +10,8 @@ class ProductoRepository(BaseRepository[Producto]):
 
     def get_with_categorias(self, producto_id: int) -> Producto | None:
         producto = self.session.get(Producto, producto_id)
+        if producto and producto.deleted_at is not None:
+            return None
         if producto:
             _ = producto.categorias
             _ = producto.ingredientes
@@ -18,7 +20,10 @@ class ProductoRepository(BaseRepository[Producto]):
     def get_all_with_relations(self, offset: int = 0, limit: int = 20) -> list[Producto]:
         return list(
             self.session.exec(
-                select(Producto).offset(offset).limit(limit)
+                select(Producto)
+                .where(Producto.deleted_at.is_(None))
+                .offset(offset)
+                .limit(limit)
             ).all()
         )
 
@@ -26,6 +31,7 @@ class ProductoRepository(BaseRepository[Producto]):
         return list(
             self.session.exec(
                 select(Producto)
+                .where(Producto.deleted_at.is_(None))
                 .where(Producto.categorias.any(Categoria.id == categoria_id))
             ).all()
         )

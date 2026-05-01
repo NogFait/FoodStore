@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import CategoriaList from "../components/CategoriaList/CategoriaList";
 import CategoriaModal from "../components/CategoriaModal/CategoriaModal";
 import CategoriaDetailModal from "../components/CategoriaDetailModal/CategoriaDetailModal";
 import ConfirmModal from "../components/ConfirmModal/ConfirmModal";
 import type { Categoria } from "../types/categoria";
-import { fetchApi } from "../lib/api";
+import { getCategorias, createCategoria, updateCategoria, deleteCategoria } from "../services/categoriaService";
 
 type ModalState =
   | { type: "none" }
@@ -23,26 +23,18 @@ const CategoriasPage = () => {
     limit: 20,
   });
 
-  const getCategorias = async () => {
-    return fetchApi<Categoria[]>("/categorias/", {
-      skip: pagination.skip,
-      limit: pagination.limit,
-    });
-  };
-
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["categorias", pagination],
-    queryFn: getCategorias,
+    queryFn: () =>
+      getCategorias({
+        skip: pagination.skip,
+        limit: pagination.limit,
+      }),
     staleTime: 10000 * 60,
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data: Omit<Categoria, "id">) => {
-      return fetchApi<Categoria>("/categorias/", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
-    },
+    mutationFn: (data: Omit<Categoria, "id">) => createCategoria(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categorias"] });
       setModal({ type: "none" });
@@ -50,28 +42,21 @@ const CategoriasPage = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      return fetchApi<void>(`/categorias/${id}`, { method: "DELETE" });
-    },
+    mutationFn: (id: number) => deleteCategoria(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categorias"] });
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Omit<Categoria, "id"> }) => {
-      return fetchApi<Categoria>(`/categorias/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      });
-    },
+    mutationFn: ({ id, data }: { id: number; data: Omit<Categoria, "id"> }) =>
+      updateCategoria(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categorias"] });
       setModal({ type: "none" });
     },
   });
 
-  // Handlers
   const handleCloseModal = () => {
     setModal({ type: "none" });
   };
@@ -181,7 +166,6 @@ const CategoriasPage = () => {
         )}
       </div>
 
-      {/* Modal: CREATE */}
       {modal.type === "create" && (
         <CategoriaModal
           categoria={null}
@@ -190,7 +174,6 @@ const CategoriasPage = () => {
         />
       )}
 
-      {/* Modal: EDIT */}
       {modal.type === "edit" && (
         <CategoriaModal
           categoria={modal.categoria}
@@ -199,7 +182,6 @@ const CategoriasPage = () => {
         />
       )}
 
-      {/* Modal: DETAIL */}
       {modal.type === "detail" && (
         <CategoriaDetailModal
           categoria={modal.categoria}
@@ -207,7 +189,6 @@ const CategoriasPage = () => {
         />
       )}
 
-      {/* Modal: CONFIRM DELETE */}
       {modal.type === "confirm-delete" && (
         <ConfirmModal
           isOpen={true}
