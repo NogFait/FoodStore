@@ -20,7 +20,7 @@ class BaseRepository(Generic[ModelT]):
         stmt = select(self.model)
         if hasattr(self.model, 'deleted_at'):
             stmt = stmt.where(self.model.deleted_at.is_(None))
-        return stmt.offset(offset).limit(limit).all()
+        return self.session.exec(stmt.offset(offset).limit(limit)).all()
 
     def add(self, instance: ModelT) -> ModelT:
         self.session.add(instance)
