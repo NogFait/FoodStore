@@ -5,7 +5,9 @@ import type { Producto } from "../types/producto";
 import ProductoModal from "../components/ProductoModal/ProductoModal";
 import ProductoDetailModal from "../components/ProductoDetailModal/ProductoDetailModal";
 import ConfirmModal from "../components/ConfirmModal/ConfirmModal";
-import { getProductos, createProducto, updateProducto, deleteProducto, getCategorias, getIngredientes } from "../services/productoService";
+import { getProductos, createProducto, updateProducto, deleteProducto } from "../services/productoService";
+import { getCategorias } from "../services/categoriaService";
+import { getIngredientes } from "../services/ingredienteService";
 
 type ModalState =
   | { type: "none" }

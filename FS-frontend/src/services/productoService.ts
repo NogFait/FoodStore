@@ -20,11 +20,3 @@ export function updateProducto(id: number, data: Omit<Producto, "id">): Promise<
 export function deleteProducto(id: number): Promise<void> {
   return fetchApi<void>(`/productos/${id}`, { method: "DELETE" });
 }
-
-export function getCategorias(params?: QueryParams): Promise<any[]> {
-  return fetchApi<any[]>("/categorias/", params);
-}
-
-export function getIngredientes(params?: QueryParams): Promise<any[]> {
-  return fetchApi<any[]>("/ingredientes/", params);
-}
