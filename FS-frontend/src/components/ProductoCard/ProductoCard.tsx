@@ -9,9 +9,10 @@ type ProductoCardProps = {
   onEdit: (producto: Producto) => void;
   onDelete: (id: number) => void;
   onView: (producto: Producto) => void;
+  isAdmin: boolean;
 };
 
-const ProductoCard = ({ producto, categorias, ingredientes, onEdit, onDelete, onView }: ProductoCardProps) => {
+const ProductoCard = ({ producto, categorias, ingredientes, onEdit, onDelete, onView, isAdmin }: ProductoCardProps) => {
   // Obtener nombres de categorías
   const nombresCategorias = producto.categorias_ids
     .map((id) => categorias.find((cat) => cat.id === id)?.nombre)
@@ -64,18 +65,22 @@ const ProductoCard = ({ producto, categorias, ingredientes, onEdit, onDelete, on
           >
             Ver
           </button>
-          <button
-            onClick={() => onEdit(producto)}
-            className="px-3 py-1.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-all"
-          >
-            Editar
-          </button>
-          <button
-            onClick={() => onDelete(producto.id)}
-            className="px-3 py-1.5 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-all"
-          >
-            Eliminar
-          </button>
+          {isAdmin && (
+            <>
+              <button
+                onClick={() => onEdit(producto)}
+                className="px-3 py-1.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-all"
+              >
+                Editar
+              </button>
+              <button
+                onClick={() => onDelete(producto.id)}
+                className="px-3 py-1.5 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-all"
+              >
+                Eliminar
+              </button>
+            </>
+          )}
         </div>
       </td>
     </tr>

@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Path, Query
 from sqlmodel import Session
 
 from ..core.database import get_session
+from ..core.deps import get_current_active_user, require_role
 
 from .schema import ProductoCreate, ProductoResponse, ProductoUpdate
 from .service import create_producto, delete_producto, list_productos, update_producto, get_producto_by_id
@@ -10,12 +11,21 @@ from .service import create_producto, delete_producto, list_productos, update_pr
 router_producto = APIRouter(prefix="/productos",tags=["productos"])
 
 
-@router_producto.post("/", response_model=ProductoResponse, status_code=status.HTTP_201_CREATED)
+@router_producto.post(
+    "/",
+    response_model=ProductoResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_role(["admin"]))],
+)
 def create(producto: ProductoCreate, session: Session = Depends(get_session)):
     return create_producto(session, producto)
 
 
-@router_producto.get("/", response_model=list[ProductoResponse])
+@router_producto.get(
+    "/",
+    response_model=list[ProductoResponse],
+    dependencies=[Depends(get_current_active_user)],
+)
 def list_all(
     session: Session = Depends(get_session),
     skip: Annotated[int, Query(ge=0, description="Número de registros a omitir")] = 0,
@@ -25,7 +35,11 @@ def list_all(
     return list_productos(session, skip=skip, limit=limit, disponible=disponible)
 
 
-@router_producto.get("/{producto_id}", response_model=ProductoResponse)
+@router_producto.get(
+    "/{producto_id}",
+    response_model=ProductoResponse,
+    dependencies=[Depends(get_current_active_user)],
+)
 def get_by_id(
     producto_id: Annotated[int, Path(ge=1, description="ID del producto")],
     session: Session = Depends(get_session),
@@ -36,7 +50,11 @@ def get_by_id(
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router_producto.patch("/{producto_id}", response_model=ProductoResponse)
+@router_producto.patch(
+    "/{producto_id}",
+    response_model=ProductoResponse,
+    dependencies=[Depends(require_role(["admin"]))],
+)
 def update(
     producto_id: Annotated[int, Path(ge=1, description="ID del producto")],
     producto: ProductoUpdate,
@@ -48,7 +66,11 @@ def update(
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router_producto.delete("/{producto_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router_producto.delete(
+    "/{producto_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_role(["admin"]))],
+)
 def delete(
     producto_id: Annotated[int, Path(ge=1, description="ID del producto")],
     session: Session = Depends(get_session),

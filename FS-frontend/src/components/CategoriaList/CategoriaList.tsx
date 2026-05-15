@@ -7,9 +7,10 @@ type CategoriaListProps = {
   onEdit: (categoria: Categoria) => void;
   onDelete: (id: number) => void;
   onView: (categoria: Categoria) => void;
+  isAdmin: boolean;
 };
 
-const CategoriaList = ({ categorias, onEdit, onDelete, onView }: CategoriaListProps) => {
+const CategoriaList = ({ categorias, onEdit, onDelete, onView, isAdmin }: CategoriaListProps) => {
   const columns = useMemo(
     () => [
       {
@@ -34,23 +35,27 @@ const CategoriaList = ({ categorias, onEdit, onDelete, onView }: CategoriaListPr
             >
               Ver
             </button>
-            <button
-              onClick={() => onEdit(row.original)}
-              className="px-3 py-1 text-sm bg-amber-100 text-amber-700 rounded-full hover:bg-amber-200 transition-colors"
-            >
-              Editar
-            </button>
-            <button
-              onClick={() => onDelete(row.original.id)}
-              className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-full hover:bg-red-200 transition-colors"
-            >
-              Eliminar
-            </button>
+            {isAdmin && (
+              <>
+                <button
+                  onClick={() => onEdit(row.original)}
+                  className="px-3 py-1 text-sm bg-amber-100 text-amber-700 rounded-full hover:bg-amber-200 transition-colors"
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={() => onDelete(row.original.id)}
+                  className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-full hover:bg-red-200 transition-colors"
+                >
+                  Eliminar
+                </button>
+              </>
+            )}
           </div>
         ),
       },
     ],
-    []
+    [isAdmin]
   );
 
   const table = useReactTable({

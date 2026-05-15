@@ -1,6 +1,6 @@
-fastapi[standar]
-SQLModel
-pydantic
+fastapi[standard]
+sqlmodel
+pydantic[email]
 passlib[bcrypt]
 python-jose[cryptography]
 pydantic-settings

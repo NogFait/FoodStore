@@ -11,9 +11,10 @@ type ProductoListProps = {
   onEdit: (producto: Producto) => void;
   onDelete: (id: number) => void;
   onView: (producto: Producto) => void;
+  isAdmin: boolean;
 };
 
-const ProductoList = ({ productos, categorias, ingredientes, onEdit, onDelete, onView }: ProductoListProps) => {
+const ProductoList = ({ productos, categorias, ingredientes, onEdit, onDelete, onView, isAdmin }: ProductoListProps) => {
   const columns = useMemo(
     () => [
       {
@@ -50,23 +51,27 @@ const ProductoList = ({ productos, categorias, ingredientes, onEdit, onDelete, o
             >
               Ver
             </button>
-            <button
-              onClick={() => onEdit(row.original)}
-              className="px-3 py-1 text-sm bg-amber-100 text-amber-700 rounded-full hover:bg-amber-200 transition-colors"
-            >
-              Editar
-            </button>
-            <button
-              onClick={() => onDelete(row.original.id)}
-              className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-full hover:bg-red-200 transition-colors"
-            >
-              Eliminar
-            </button>
+            {isAdmin && (
+              <>
+                <button
+                  onClick={() => onEdit(row.original)}
+                  className="px-3 py-1 text-sm bg-amber-100 text-amber-700 rounded-full hover:bg-amber-200 transition-colors"
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={() => onDelete(row.original.id)}
+                  className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-full hover:bg-red-200 transition-colors"
+                >
+                  Eliminar
+                </button>
+              </>
+            )}
           </div>
         ),
       },
     ],
-    [categorias, ingredientes]
+    [categorias, ingredientes, isAdmin]
   );
 
   const table = useReactTable({

@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ProductoList from "../components/ProductoList/ProductoList";
+import TiendaProductCard from "../components/TiendaProductCard/TiendaProductCard";
 import type { Producto } from "../types/producto";
 import ProductoModal from "../components/ProductoModal/ProductoModal";
 import ProductoDetailModal from "../components/ProductoDetailModal/ProductoDetailModal";
 import ConfirmModal from "../components/ConfirmModal/ConfirmModal";
+import { useAuth } from "../hooks/useAuth";
 import { getProductos, createProducto, updateProducto, deleteProducto } from "../services/productoService";
 import { getCategorias } from "../services/categoriaService";
 import { getIngredientes } from "../services/ingredienteService";
@@ -19,6 +21,8 @@ type ModalState =
 const ProductosPage = () => {
   const [modal, setModal] = useState<ModalState>({ type: "none" });
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   const [pagination, setPagination] = useState({
     skip: 0,
@@ -118,15 +122,17 @@ const ProductosPage = () => {
               {data ? `${data.length} productos encontrados` : "Cargando..."}
             </p>
           </div>
-          <button
-            onClick={() => setModal({ type: "create" })}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Nuevo Producto
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => setModal({ type: "create" })}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Nuevo Producto
+            </button>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-4 mb-6 p-4 bg-white rounded-xl border border-gray-200">
@@ -200,14 +206,27 @@ const ProductosPage = () => {
         )}
 
         {data && data.length > 0 && (
-          <ProductoList
-            productos={data}
-            categorias={categorias || []}
-            ingredientes={ingredientes || []}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onView={handleView}
-          />
+          isAdmin ? (
+            <ProductoList
+              productos={data}
+              categorias={categorias || []}
+              ingredientes={ingredientes || []}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onView={handleView}
+              isAdmin={isAdmin}
+            />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {data.map((producto) => (
+                <TiendaProductCard
+                  key={producto.id}
+                  producto={producto}
+                  categorias={categorias || []}
+                />
+              ))}
+            </div>
+          )
         )}
       </div>
 

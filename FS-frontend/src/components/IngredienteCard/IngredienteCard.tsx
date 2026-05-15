@@ -5,9 +5,10 @@ type IngredienteCardProps = {
   onEdit: (ingrediente: Ingrediente) => void;
   onDelete: (id: number) => void;
   onView: (ingrediente: Ingrediente) => void;
+  isAdmin: boolean;
 };
 
-const IngredienteCard = ({ ingrediente, onEdit, onDelete, onView }: IngredienteCardProps) => {
+const IngredienteCard = ({ ingrediente, onEdit, onDelete, onView, isAdmin }: IngredienteCardProps) => {
   return (
     <tr className="bg-white hover:bg-indigo-50 transition-colors duration-200">
       <td className="px-6 py-4 text-sm text-indigo-600 font-semibold">
@@ -32,18 +33,22 @@ const IngredienteCard = ({ ingrediente, onEdit, onDelete, onView }: IngredienteC
           >
             Ver
           </button>
-          <button
-            onClick={() => onEdit(ingrediente)}
-            className="px-3 py-1.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-all"
-          >
-            Editar
-          </button>
-          <button
-            onClick={() => onDelete(ingrediente.id)}
-            className="px-3 py-1.5 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-all"
-          >
-            Eliminar
-          </button>
+          {isAdmin && (
+            <>
+              <button
+                onClick={() => onEdit(ingrediente)}
+                className="px-3 py-1.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-all"
+              >
+                Editar
+              </button>
+              <button
+                onClick={() => onDelete(ingrediente.id)}
+                className="px-3 py-1.5 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-all"
+              >
+                Eliminar
+              </button>
+            </>
+          )}
         </div>
       </td>
     </tr>

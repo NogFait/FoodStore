@@ -7,9 +7,10 @@ type IngredienteListProps = {
   onEdit: (ingrediente: Ingrediente) => void;
   onDelete: (id: number) => void;
   onView: (ingrediente: Ingrediente) => void;
+  isAdmin: boolean;
 };
 
-const IngredienteList = ({ ingredientes, onEdit, onDelete, onView }: IngredienteListProps) => {
+const IngredienteList = ({ ingredientes, onEdit, onDelete, onView, isAdmin }: IngredienteListProps) => {
   const columns = useMemo(
     () => [
       {
@@ -38,23 +39,27 @@ const IngredienteList = ({ ingredientes, onEdit, onDelete, onView }: Ingrediente
             >
               Ver
             </button>
-            <button
-              onClick={() => onEdit(row.original)}
-              className="px-3 py-1 text-sm bg-amber-100 text-amber-700 rounded-full hover:bg-amber-200 transition-colors"
-            >
-              Editar
-            </button>
-            <button
-              onClick={() => onDelete(row.original.id)}
-              className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-full hover:bg-red-200 transition-colors"
-            >
-              Eliminar
-            </button>
+            {isAdmin && (
+              <>
+                <button
+                  onClick={() => onEdit(row.original)}
+                  className="px-3 py-1 text-sm bg-amber-100 text-amber-700 rounded-full hover:bg-amber-200 transition-colors"
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={() => onDelete(row.original.id)}
+                  className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-full hover:bg-red-200 transition-colors"
+                >
+                  Eliminar
+                </button>
+              </>
+            )}
           </div>
         ),
       },
     ],
-    []
+    [isAdmin]
   );
 
   const table = useReactTable({

@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import CategoriaList from "../components/CategoriaList/CategoriaList";
+import TiendaCategoriaCard from "../components/TiendaCategoriaCard/TiendaCategoriaCard";
 import CategoriaModal from "../components/CategoriaModal/CategoriaModal";
 import CategoriaDetailModal from "../components/CategoriaDetailModal/CategoriaDetailModal";
 import ConfirmModal from "../components/ConfirmModal/ConfirmModal";
 import type { Categoria } from "../types/categoria";
+import { useAuth } from "../hooks/useAuth";
 import { getCategorias, createCategoria, updateCategoria, deleteCategoria } from "../services/categoriaService";
 
 type ModalState =
@@ -17,6 +19,8 @@ type ModalState =
 const CategoriasPage = () => {
   const [modal, setModal] = useState<ModalState>({ type: "none" });
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   const [pagination, setPagination] = useState({
     skip: 0,
@@ -98,15 +102,17 @@ const CategoriasPage = () => {
               {data ? `${data.length} categorías encontradas` : "Cargando..."}
             </p>
           </div>
-          <button
-            onClick={() => setModal({ type: "create" })}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Nueva Categoría
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => setModal({ type: "create" })}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Nueva Categoría
+            </button>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-4 mb-6 p-4 bg-white rounded-xl border border-gray-200">
@@ -157,12 +163,21 @@ const CategoriasPage = () => {
         )}
 
         {data && data.length > 0 && (
-          <CategoriaList
-            categorias={data}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onView={handleView}
-          />
+          isAdmin ? (
+            <CategoriaList
+              categorias={data}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onView={handleView}
+              isAdmin={isAdmin}
+            />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {data.map((categoria) => (
+                <TiendaCategoriaCard key={categoria.id} categoria={categoria} />
+              ))}
+            </div>
+          )
         )}
       </div>
 

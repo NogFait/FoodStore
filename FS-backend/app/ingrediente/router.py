@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Path, Query
 from sqlmodel import Session
 
 from ..core.database import get_session
+from ..core.deps import get_current_active_user, require_role
 from .schema import IngredienteCreate, IngredienteResponse, IngredienteUpdate
 from .service import (
     create_ingrediente,
@@ -15,12 +16,21 @@ from .service import (
 router_ingrediente = APIRouter(prefix="/ingredientes", tags=["ingredientes"])
 
 
-@router_ingrediente.post("/", response_model=IngredienteResponse, status_code=status.HTTP_201_CREATED)
+@router_ingrediente.post(
+    "/",
+    response_model=IngredienteResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_role(["admin"]))],
+)
 def create(ingrediente: IngredienteCreate, session: Session = Depends(get_session)):
     return create_ingrediente(session, ingrediente)
 
 
-@router_ingrediente.get("/", response_model=list[IngredienteResponse])
+@router_ingrediente.get(
+    "/",
+    response_model=list[IngredienteResponse],
+    dependencies=[Depends(get_current_active_user)],
+)
 def list_all(
     session: Session = Depends(get_session),
     skip: Annotated[int, Query(ge=0, description="Número de registros a omitir")] = 0,
@@ -30,7 +40,11 @@ def list_all(
     return list_ingredientes(session, skip=skip, limit=limit, es_alergeno=es_alergeno)
 
 
-@router_ingrediente.get("/{ingrediente_id}", response_model=IngredienteResponse)
+@router_ingrediente.get(
+    "/{ingrediente_id}",
+    response_model=IngredienteResponse,
+    dependencies=[Depends(get_current_active_user)],
+)
 def get_by_id(
     ingrediente_id: Annotated[int, Path(ge=1, description="ID del ingrediente")],
     session: Session = Depends(get_session),
@@ -41,7 +55,11 @@ def get_by_id(
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router_ingrediente.patch("/{ingrediente_id}", response_model=IngredienteResponse)
+@router_ingrediente.patch(
+    "/{ingrediente_id}",
+    response_model=IngredienteResponse,
+    dependencies=[Depends(require_role(["admin"]))],
+)
 def update(
     ingrediente_id: Annotated[int, Path(ge=1, description="ID del ingrediente")],
     ingrediente: IngredienteUpdate,
@@ -53,7 +71,11 @@ def update(
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router_ingrediente.delete("/{ingrediente_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router_ingrediente.delete(
+    "/{ingrediente_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_role(["admin"]))],
+)
 def delete(
     ingrediente_id: Annotated[int, Path(ge=1, description="ID del ingrediente")],
     session: Session = Depends(get_session),
