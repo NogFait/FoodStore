@@ -8,7 +8,6 @@ Campos clave para seguridad:
 """
 
 from sqlmodel import SQLModel, Field
-from pydantic import EMailStr
 
 class Usuario(SQLModel, table=True):
     id:              int | None = Field(default=None, primary_key=True)

@@ -41,6 +41,7 @@ export async function fetchApi<T>(
       ? { "Content-Type": "application/json" }
       : undefined,
     body: options.body,
+    credentials: "include", 
   });
 
   if (!res.ok) {

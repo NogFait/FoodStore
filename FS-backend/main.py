@@ -30,7 +30,8 @@ app.add_middleware(
     
     # Lista de orígenes permitidos (frontend)
     # En este caso, permitimos el acceso desde React en localhost:5173
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173", "http://localhost:5174"],
+    allow_credentials=True,
     
     # Métodos HTTP permitidos (GET, POST, PUT, DELETE, etc.)
     # "*" significa que se permiten todos

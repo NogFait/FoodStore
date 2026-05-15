@@ -19,7 +19,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.core.unit_of_work import UnitOfWork, get_uow
 from app.core.deps import get_current_active_user, require_role
-from app.usuarios.model import Usuario, UserCreate, UserPublic, Token
+from app.usuarios.model import Usuario
+from app.usuarios.schema import UserCreate, UserPublic, Token
 from app.usuarios.service import UsuarioService
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])

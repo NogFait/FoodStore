@@ -17,7 +17,8 @@ from fastapi import HTTPException, status
 from app.core.config import settings
 from app.core.security import hash_password, verify_password, create_access_token
 from app.core.unit_of_work import UnitOfWork
-from app.usuarios.model import Usuario, UserCreate, Token, UserPublic
+from app.usuarios.model import Usuario
+from app.usuarios.schema import UserCreate, Token, UserPublic
 
 
 class UsuarioService:
@@ -52,8 +53,10 @@ class UsuarioService:
         return rta
 
     def authenticate(self, username: str, password: str) -> Token:
-        """Autentica con username + password y retorna un Token con JWT."""
+        """Autentica con username/email + password y retorna un Token con JWT."""
         user = self.uow.usuarios.get_by_username(username)
+        if not user:
+            user = self.uow.usuarios.get_by_email(username)
 
         if not user or not verify_password(password, user.hashed_password):
             raise HTTPException(
