@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { useForm } from "@tanstack/react-form";
 import type { Ingrediente } from "../../types/ingrediente";
 import FormAlert from "../FormAlert/FormAlert";
 
@@ -10,44 +11,36 @@ type IngredienteModalProps = {
 };
 
 const IngredienteModal = ({ isOpen, ingrediente, onClose, onSubmit }: IngredienteModalProps) => {
-  const [nombre, setNombre] = useState("");
-  const [descripcion, setDescripcion] = useState("");
-  const [esAlergeno, setEsAlergeno] = useState(false);
-  const [error, setError] = useState("");
+  const form = useForm({
+    defaultValues: {
+      nombre: "",
+      descripcion: "",
+      es_alergeno: false,
+    },
+    onSubmit: async ({ value }) => {
+      onSubmit({
+        nombre: value.nombre,
+        descripcion: value.descripcion,
+        es_alergeno: value.es_alergeno,
+      });
+    },
+  });
 
   useEffect(() => {
-    if (ingrediente) {
-      setNombre(ingrediente.nombre);
-      setDescripcion(ingrediente.descripcion);
-      setEsAlergeno(ingrediente.es_alergeno);
-    } else {
-      setNombre("");
-      setDescripcion("");
-      setEsAlergeno(false);
+    if (isOpen) {
+      if (ingrediente) {
+        form.setFieldValue("nombre", ingrediente.nombre);
+        form.setFieldValue("descripcion", ingrediente.descripcion);
+        form.setFieldValue("es_alergeno", ingrediente.es_alergeno);
+      } else {
+        form.setFieldValue("nombre", "");
+        form.setFieldValue("descripcion", "");
+        form.setFieldValue("es_alergeno", false);
+      }
     }
-    setError("");
   }, [ingrediente, isOpen]);
 
   if (!isOpen) return null;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-
-    if (!nombre.trim()) {
-      setError("El nombre es obligatorio");
-      return;
-    }
-    if (!descripcion.trim()) {
-      setError("La descripción es obligatoria");
-      return;
-    }
-    onSubmit({
-      nombre,
-      descripcion,
-      es_alergeno: esAlergeno,
-    });
-  };
 
   const esModoEditar = !!ingrediente;
   const titulo = esModoEditar ? "Editar Ingrediente" : "Nuevo Ingrediente";
@@ -59,40 +52,73 @@ const IngredienteModal = ({ isOpen, ingrediente, onClose, onSubmit }: Ingredient
           <h2 className="text-xl font-bold text-white">{titulo}</h2>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit();
+          }}
+        >
           <div className="p-6 space-y-4">
-            {error && (
-              <FormAlert message={error} onClose={() => setError("")} />
-            )}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nombre *
-              </label>
-              <input
-                type="text"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+              <form.Field
+                name="nombre"
+                validators={{
+                  onChange: ({ value }) =>
+                    !value?.trim() ? { message: "El nombre es obligatorio" } : undefined,
+                }}
+                children={(field) => (
+                  <>
+                    <input
+                      type="text"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                    />
+                    {field.state.meta.errors && (
+                      <p className="text-red-500 text-xs mt-1">{field.state.meta.errors[0]?.message}</p>
+                    )}
+                  </>
+                )}
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Descripción *
-              </label>
-              <input
-                type="text"
-                value={descripcion}
-                onChange={(e) => setDescripcion(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+              <label className="block text-sm font-medium text-gray-700 mb-1">Descripción *</label>
+              <form.Field
+                name="descripcion"
+                validators={{
+                  onChange: ({ value }) =>
+                    !value?.trim() ? { message: "La descripción es obligatoria" } : undefined,
+                }}
+                children={(field) => (
+                  <>
+                    <input
+                      type="text"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                    />
+                    {field.state.meta.errors && (
+                      <p className="text-red-500 text-xs mt-1">{field.state.meta.errors[0]?.message}</p>
+                    )}
+                  </>
+                )}
               />
             </div>
+
             <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="esAlergeno"
-                checked={esAlergeno}
-                onChange={(e) => setEsAlergeno(e.target.checked)}
-                className="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+              <form.Field
+                name="es_alergeno"
+                children={(field) => (
+                  <input
+                    type="checkbox"
+                    id="esAlergeno"
+                    checked={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.checked)}
+                    className="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                  />
+                )}
               />
               <label htmlFor="esAlergeno" className="text-sm font-medium text-gray-700">
                 Es alérgeno
@@ -108,12 +134,18 @@ const IngredienteModal = ({ isOpen, ingrediente, onClose, onSubmit }: Ingredient
             >
               Cancelar
             </button>
-            <button
-              type="submit"
-              className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
-            >
-              Guardar
-            </button>
+            <form.Subscribe
+              selector={(state) => [state.canSubmit, state.isSubmitting]}
+              children={([canSubmit, isSubmitting]) => (
+                <button
+                  type="submit"
+                  disabled={!canSubmit}
+                  className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50"
+                >
+                  {isSubmitting ? "Guardando..." : "Guardar"}
+                </button>
+              )}
+            />
           </div>
         </form>
       </div>

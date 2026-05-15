@@ -1,4 +1,9 @@
+from typing import Annotated
+
+from fastapi import Depends
 from sqlmodel import Session
+
+from app.core.database import get_session
 
 
 class UnitOfWork:
@@ -20,3 +25,8 @@ class UnitOfWork:
 
     def rollback(self) -> None:
         self._session.rollback()
+
+
+def get_uow(session: Annotated[Session, Depends(get_session)]) -> UnitOfWork:
+    from app.usuarios.unit_of_work import UsuarioUnitOfWork
+    return UsuarioUnitOfWork(session)

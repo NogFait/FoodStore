@@ -7,6 +7,7 @@ from app.core.database import engine
 from app.categoria.router import router_categoria
 from app.producto.router import router_producto
 from app.ingrediente.router import router_ingrediente
+from app.usuarios.router import router as router_usuarios
 
 
 # Creamos la instancia principal de la aplicación FastAPI
@@ -48,3 +49,4 @@ app.add_middleware(
 app.include_router(router_categoria)
 app.include_router(router_producto)
 app.include_router(router_ingrediente)
+app.include_router(router_usuarios)

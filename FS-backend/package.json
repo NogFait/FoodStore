@@ -1,7 +1,10 @@
 {
 	"devDependencies": {
-		"tailwindcss": "^4.2.2",
+		"autoprefixer": "^10.4.27",
 		"postcss": "^8.5.9",
-		"autoprefixer": "^10.4.27"
+		"tailwindcss": "^4.2.2"
+	},
+	"dependencies": {
+		"jsonwebtoken": "^9.0.3"
 	}
 }
