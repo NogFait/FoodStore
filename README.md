@@ -1,6 +1,6 @@
 # FoodStore - Sistema de Gestión de Restaurant
 
-Sistema de gestión integral para FoodStore con backend en FastAPI y frontend en React.
+Sistema de gestión integral para FoodStore con backend en FastAPI y dos frontends en React.
 
 # Video de Presentación de la demo del sistema
 https://youtu.be/bpHejGNNPj4
@@ -9,9 +9,18 @@ https://youtu.be/bpHejGNNPj4
 
 ```
 FoodStore/
-├── FS-backend/       # Backend - FastAPI + SQLModel + PostgreSQL
-└── FS-frontend/      # Frontend - React + TanStack Query + Tailwind CSS
+├── FS-backend/              # Backend - FastAPI + SQLModel + PostgreSQL
+├── FS-frontend/             # Admin app - React + TanStack Table + Axios
+└── FS-Frontend-cliente/     # Store app - React + Zustand + Axios
 ```
+
+### Dos Frontends Independientes
+
+| App | Carpeta | Propósito | Stack |
+|-----|---------|-----------|-------|
+| **Admin** | `FS-frontend/` | Gestión interna | pnpm, TanStack Table/Form, React Router |
+
+Ambos frontends comparten el mismo backend (`localhost:8000`) y se autentican con JWT via cookies HttpOnly.
 
 ## Tecnologías
 
@@ -21,9 +30,19 @@ FoodStore/
 - **PostgreSQL**: Base de datos relacional
 - **Python**: Lenguaje de programación
 
-### Frontend
-- **React**: Biblioteca para interfaces de usuario
+### Frontend Admin (FS-frontend)
+- **React 19**: Biblioteca para interfaces de usuario
 - **TanStack Query**: Gestión de estado del servidor
+- **TanStack Table**: Tablas con ordenamiento y acciones
+- **TanStack Form**: Formularios con validación
+- **Tailwind CSS**: Framework de estilos
+- **TypeScript**: Tipado estático
+- **Vite**: Build tool moderno
+
+### Frontend Store (FS-Frontend-cliente)
+- **React 19**: Biblioteca para interfaces de usuario
+- **TanStack Query**: Gestión de estado del servidor
+- **Zustand**: Estado global (carrito de compras)
 - **Tailwind CSS**: Framework de estilos
 - **TypeScript**: Tipado estático
 - **Vite**: Build tool moderno
@@ -36,7 +55,7 @@ FoodStore/
 
 ### Frontend
 - Node.js 18+
-- pnpm (o npm)
+- pnpm (para admin) o npm (para store)
 
 ## Instalación
 
@@ -48,21 +67,36 @@ pip install -r requirements.txt
 python main.py
 ```
 
-### Frontend
+### Frontend Admin
 ```bash
 cd FS-frontend
 pnpm install
 pnpm dev
 ```
 
+### Frontend Store
+```bash
+cd FS-Frontend-cliente
+npm install
+npm run dev
+```
+
 ## Características
 
-- **Gestión de Productos**: CRUD completo con categorías
+### Admin App
+- **Gestión de Productos**: CRUD completo con categorías e ingredientes
 - **Gestión de Categorías**: Organización de productos
 - **Gestión de Ingredientes**: Control de ingredientes y alérgenos
-- **Relaciones N:N**: Productos-Categorías, Productos-Ingredientes
+- **Autenticación**: Login/register con JWT y roles (admin)
 - **Paginación**: Navegación entre páginas de resultados
 - **Filtros**: Búsqueda por disponibilidad y alérgenos
+- **Relaciones N:N**: Productos-Categorías, Productos-Ingredientes
+
+### Store App
+- **Catálogo de productos**: Vista con tarjetas visuales
+- **Carrito de compras**: Estado con Zustand
+- **Autenticación**: Login/register para historial de pedidos
+- **Navegación pública**: Sin necesidad de login para navegar
 
 ## API Endpoints
 
@@ -86,5 +120,3 @@ pnpm dev
 - `GET /ingredientes/{id}` - Obtener ingrediente
 - `PATCH /ingredientes/{id}` - Actualizar ingrediente
 - `DELETE /ingredientes/{id}` - Eliminar ingrediente
-
-

@@ -1,11 +1,12 @@
 import { Navigate } from "react-router-dom";
 import { Route, Routes } from "react-router-dom";
-import ProductosPage from "../pages/ProductosPage";
-import CategoriasPage from "../pages/CategoriasPage";
-import IngredientesPage from "../pages/IngredientesPage";
-import Login from "../pages/auth/Login";
-import Register from "../pages/auth/Register";
-import { ProtectedRoute, PublicRoute } from "../components/ProtectedRoute/ProtectedRoute";
+import ProductosPage from "../features/productos/pages/ProductosPage";
+import CategoriasPage from "../features/categorias/pages/CategoriasPage";
+import IngredientesPage from "../features/ingredientes/pages/IngredientesPage";
+import PedidosPage from "../features/pedidos/pages/PedidosPage";
+import Login from "../features/auth/pages/Login";
+import Register from "../features/auth/pages/Register";
+import { ProtectedRoute, PublicRoute } from "../features/auth/components/ProtectedRoute";
 
 const AppRouter = () => {
   return (
@@ -32,6 +33,14 @@ const AppRouter = () => {
         element={
           <ProtectedRoute>
             <IngredientesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/pedidos"
+        element={
+          <ProtectedRoute>
+            <PedidosPage />
           </ProtectedRoute>
         }
       />
