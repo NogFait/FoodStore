@@ -4,7 +4,7 @@ import IngredienteList from "../components/IngredienteList";
 import IngredienteModal from "../components/IngredienteModal";
 import IngredienteDetailModal from "../components/IngredienteDetailModal";
 import ConfirmModal from "../../../shared/components/ConfirmModal/ConfirmModal";
-import type { Ingrediente } from "../../../types/ingrediente";
+import type { Ingrediente } from "../types";
 import { useAuth } from "../../auth/hooks/useAuth";
 import { getIngredientes, createIngrediente, updateIngrediente, deleteIngrediente } from "../services/ingredienteService";
 

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useForm } from "@tanstack/react-form";
-import type { Categoria } from "../../../types/categoria";
+import type { Categoria } from "../types";
 
 type CategoriaModalProps = {
   categoria: Categoria | null;

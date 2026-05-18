@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ProductoList from "../components/ProductoList";
-import type { Producto } from "../../../types/producto";
+import type { Producto } from "../types";
 import ProductoModal from "../components/ProductoModal";
 import ProductoDetailModal from "../components/ProductoDetailModal";
 import ConfirmModal from "../../../shared/components/ConfirmModal/ConfirmModal";

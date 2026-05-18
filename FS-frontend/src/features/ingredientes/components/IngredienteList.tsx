@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useReactTable, getCoreRowModel, flexRender } from "@tanstack/react-table";
-import type { Ingrediente } from "../../../types/ingrediente";
+import type { Ingrediente } from "../types";
 
 type IngredienteListProps = {
   ingredientes: Ingrediente[];

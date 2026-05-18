@@ -4,7 +4,7 @@ import CategoriaList from "../components/CategoriaList";
 import CategoriaModal from "../components/CategoriaModal";
 import CategoriaDetailModal from "../components/CategoriaDetailModal";
 import ConfirmModal from "../../../shared/components/ConfirmModal/ConfirmModal";
-import type { Categoria } from "../../../types/categoria";
+import type { Categoria } from "../types";
 import { useAuth } from "../../auth/hooks/useAuth";
 import { getCategorias, createCategoria, updateCategoria, deleteCategoria } from "../services/categoriaService";
 

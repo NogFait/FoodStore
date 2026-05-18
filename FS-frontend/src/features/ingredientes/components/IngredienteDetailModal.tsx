@@ -1,4 +1,4 @@
-import type { Ingrediente } from "../../../types/ingrediente";
+import type { Ingrediente } from "../types";
 
 type IngredienteDetailModalProps = {
   ingrediente: Ingrediente;

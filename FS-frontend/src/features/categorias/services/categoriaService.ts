@@ -1,5 +1,5 @@
 import api from "../../../api/api";
-import type { Categoria } from "../../../types/categoria";
+import type { Categoria } from "../types";
 
 export function getCategorias(params?: Record<string, string | number | boolean | undefined>) {
   return api.get<Categoria[]>("/categorias/", { params }).then((r) => r.data);

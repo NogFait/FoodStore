@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { useReactTable, getCoreRowModel, flexRender } from "@tanstack/react-table";
-import type { Producto } from "../../../types/producto";
-import type { Categoria } from "../../../types/categoria";
-import type { Ingrediente } from "../../../types/ingrediente";
+import type { Producto } from "../types";
+import type { Categoria } from "../../categorias/types";
+import type { Ingrediente } from "../../ingredientes/types";
 
 type ProductoListProps = {
   productos: Producto[];

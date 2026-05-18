@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useReactTable, getCoreRowModel, flexRender } from "@tanstack/react-table";
-import type { Categoria } from "../../../types/categoria";
+import type { Categoria } from "../types";
 
 type CategoriaListProps = {
   categorias: Categoria[];

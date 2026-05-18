@@ -1,4 +1,4 @@
-import type { Categoria } from "../../../types/categoria";
+import type { Categoria } from "../types";
 
 type CategoriaCardProps = {
   categoria: Categoria;

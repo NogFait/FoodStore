@@ -1,5 +1,5 @@
 import api, { API_BASE } from "../../../api/api";
-import type { usuarioPublico, usuariosLogin, usuariosRegister, AuthResponse } from "../../../types/usuario";
+import type { usuarioPublico, usuariosLogin, usuariosRegister, AuthResponse } from "../types";
 
 export async function login(data: usuariosLogin): Promise<AuthResponse> {
   const formData = new URLSearchParams();

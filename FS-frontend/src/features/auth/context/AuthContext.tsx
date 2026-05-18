@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, useCallback, type ReactNode } from "react";
-import type { usuarioPublico, usuariosLogin, usuariosRegister } from "../../../types/usuario";
+import type { usuarioPublico, usuariosLogin, usuariosRegister } from "../types";
 import * as authService from "../services/authService";
 
 type AuthContextType = {

@@ -1,5 +1,5 @@
 import api from "../../../api/api";
-import type { Ingrediente } from "../../../types/ingrediente";
+import type { Ingrediente } from "../types";
 
 export function getIngredientes(params?: Record<string, string | number | boolean | undefined>) {
   return api.get<Ingrediente[]>("/ingredientes/", { params }).then((r) => r.data);

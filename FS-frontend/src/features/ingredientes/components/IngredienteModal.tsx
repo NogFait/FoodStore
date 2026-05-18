@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useForm } from "@tanstack/react-form";
-import type { Ingrediente } from "../../../types/ingrediente";
+import type { Ingrediente } from "../types";
 
 type IngredienteModalProps = {
   isOpen: boolean;
