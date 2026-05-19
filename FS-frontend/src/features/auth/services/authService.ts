@@ -5,6 +5,7 @@ export async function login(data: usuariosLogin): Promise<AuthResponse> {
   const formData = new URLSearchParams();
   formData.append("username", data.email);
   formData.append("password", data.password);
+  
   const res = await fetch(`${API_BASE}/api/v1/auth/token`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },

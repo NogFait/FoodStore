@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import Navbar from "./components/Navbar/Navbar";
+import Navbar from "./shared/components/Navbar/Navbar";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AppRouter from "./router/AppRouter";
 import { AuthProvider } from "./features/auth/context/AuthContext";
