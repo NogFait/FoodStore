@@ -16,6 +16,7 @@ class Producto(SQLModel, table=True):
     imagenes_url: Optional[str] = None
     stock_cantidad: int = Field(default=0, ge=0)
     disponible: bool = True
+    unidad_venta_id: Optional[int] = Field(foreign_key="unidad_medida.id", default=None)
 
     categorias: List["Categoria"] = Relationship(
         back_populates="productos",
@@ -26,6 +27,8 @@ class Producto(SQLModel, table=True):
         back_populates="productos",
         link_model=ProductoIngrediente
     )
+
+    unidad_venta: Optional["UnidadMedida"] = Relationship(back_populates="productos")
 
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: Optional[datetime] = None

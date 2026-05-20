@@ -10,6 +10,7 @@ from app.ingrediente.router import router_ingrediente
 from app.usuarios.router import router as router_usuarios
 from app.rol.router import router_rol
 from app.direccion.router import router_direccion
+from app.unidad_medida.router import router_unidad_medida
 
 
 # Creamos la instancia principal de la aplicación FastAPI
@@ -55,3 +56,4 @@ app.include_router(router_ingrediente)
 app.include_router(router_usuarios)
 app.include_router(router_rol)
 app.include_router(router_direccion)
+app.include_router(router_unidad_medida)
