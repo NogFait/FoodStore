@@ -23,6 +23,9 @@ from passlib.context import CryptContext
 # Configuración central (SECRET_KEY, ALGORITHM, expiración, etc.)
 from app.core.config import settings
 
+import hashlib
+import secrets
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # HASHING DE CONTRASEÑAS (bcrypt)
@@ -139,3 +142,17 @@ def decode_access_token(token: str) -> dict | None:
     except JWTError:
         # Cualquier problema (firma, expiración, formato, etc.)
         return None
+    
+
+def hash_token(token: str) -> str:
+    """SHA-256 del token para almacenar en DB."""
+    return hashlib.sha256(token.encode()).hexdigest()
+
+def generate_refresh_token() -> str:
+    """Genera un token aleatorio seguro de 32 bytes."""
+    return secrets.token_urlsafe(32)
+
+def create_refresh_token_pair() -> tuple[str, str]:
+    """Genera par (token_plano, token_hash). El hash va a DB, el plano a la cookie."""
+    token = generate_refresh_token()
+    return token, hash_token(token)

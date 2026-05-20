@@ -1,4 +1,4 @@
-
+from typing import List
 from sqlmodel import SQLModel, Field
 from pydantic import EmailStr
 
@@ -15,11 +15,11 @@ class UserPublic(SQLModel):
     username:  str
     full_name: str
     email:     str
-    role:      str
+    roles:     List[str] = []
     disabled:  bool
 
 class Token(SQLModel):
     """Respuesta del endpoint /token."""
     access_token: str
     token_type:   str = "bearer"
-    expires_in:   int  # segundos hasta expiración
+    expires_in:   int

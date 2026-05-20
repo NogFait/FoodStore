@@ -88,7 +88,7 @@ def ruta_privada(
 ):
     return {
         "mensaje": f"¡Hola, {current_user.full_name}! Accediste a una ruta privada.",
-        "tu_rol": current_user.role,
+        "tus_roles": current_user.roles,
     }
 
 
