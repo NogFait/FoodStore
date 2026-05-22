@@ -1,6 +1,7 @@
 from sqlmodel import Session, select
 from app.core.repository import BaseRepository
 from app.usuarios.model import Usuario
+from app.usuario_rol.model import UsuarioRol
 
 
 class UsuarioRepository(BaseRepository[Usuario]):
@@ -16,6 +17,11 @@ class UsuarioRepository(BaseRepository[Usuario]):
         return self.session.exec(
             select(Usuario).where(Usuario.email == email)
         ).first()
+
+    def get_roles(self, usuario_id: int) -> list[UsuarioRol]:
+        return list(self.session.exec(
+            select(UsuarioRol).where(UsuarioRol.usuario_id == usuario_id)
+        ).all())
 
     def update(self, usuario: Usuario) -> Usuario:
         self.session.add(usuario)

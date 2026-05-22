@@ -1,136 +1,120 @@
-# FoodStore Frontend
+# FoodStore - Admin App
 
-Frontend del sistema de gestión de FoodStore construido con React.
+Frontend de administración del sistema FoodStore. App interna para gestión de productos, categorías, ingredientes y pedidos.
 
 ## Tecnologías
 
 - **React 19**: Biblioteca para interfaces de usuario
 - **TypeScript**: Tipado estático
 - **TanStack Query**: Gestión de estado del servidor
+- **TanStack Table**: Tablas con ordenamiento
+- **TanStack Form**: Formularios con validación
+- **Axios**: Cliente HTTP
 - **React Router**: Navegación SPA
 - **Tailwind CSS**: Framework de estilos
 - **Vite**: Build tool moderno
 
-## Estructura del Proyecto
+## Estructura del Proyecto (Feature-based)
 
 ```
 FS-frontend/
 ├── src/
-│   ├── components/           # Componentes reutilizables
-│   │   ├── CategoriaCard/
-│   │   ├── CategoriaList/
-│   │   ├── CategoriaModal/
-│   │   ├── CategoriaDetailModal/
-│   │   ├── ConfirmModal/
-│   │   ├── FormAlert/
-│   │   ├── IngredienteCard/
-│   │   ├── IngredienteList/
-│   │   ├── IngredienteModal/
-│   │   ├── IngredienteDetailModal/
+│   ├── api/                    # Cliente HTTP (Axios)
+│   │   └── api.ts
+│   ├── components/             # Componentes compartidos
 │   │   ├── Navbar/
-│   │   ├── ProductoCard/
-│   │   ├── ProductoList/
-│   │   ├── ProductoModal/
-│   │   └── ProductoDetailModal/
-│   ├── pages/                # Páginas principales
-│   │   ├── CategoriasPage.tsx
-│   │   ├── IngredientesPage.tsx
-│   │   └── ProductosPage.tsx
-│   ├── types/                # Tipos TypeScript
+│   │   └── FormAlert/
+│   ├── features/               # Módulos por dominio
+│   │   ├── auth/               # Autenticación
+│   │   │   ├── context/        # AuthContext (React Context)
+│   │   │   ├── hooks/          # useAuth hook
+│   │   │   ├── pages/          # Login, Register
+│   │   │   ├── components/     # ProtectedRoute, PublicRoute
+│   │   │   └── services/       # authService (login, register, logout)
+│   │   ├── categorias/         # Gestión de categorías
+│   │   │   ├── pages/
+│   │   │   ├── components/     # CategoriaCard, CategoriaList, CategoriaModal, CategoriaDetailModal
+│   │   │   └── services/
+│   │   ├── ingredientes/       # Gestión de ingredientes
+│   │   │   ├── pages/
+│   │   │   ├── components/     # IngredienteCard, IngredienteList, IngredienteModal, IngredienteDetailModal
+│   │   │   └── services/
+│   │   ├── productos/          # Gestión de productos
+│   │   │   ├── pages/
+│   │   │   ├── components/     # ProductoCard, ProductoList, ProductoModal, ProductoDetailModal
+│   │   │   └── services/
+│   │   └── pedidos/            # Gestión de pedidos
+│   │       └── pages/          # PedidosPage (placeholder)
+│   ├── router/                 # Configuración de rutas
+│   │   └── AppRouter.tsx
+│   ├── shared/                 # Componentes compartidos entre features
+│   │   └── components/
+│   │       └── ConfirmModal/
+│   ├── types/                  # Tipos TypeScript compartidos
 │   │   ├── categoria.ts
 │   │   ├── ingrediente.ts
-│   │   └── producto.ts
-│   ├── lib/                  # Utilidades
-│   │   └── api.ts           # Cliente API
-│   ├── App.tsx              # Componente principal
-│   ├── main.tsx             # Punto de entrada
-│   └── index.css            # Estilos globales
+│   │   ├── producto.ts
+│   │   └── usuario.ts
+│   ├── App.tsx                 # Componente principal
+│   ├── main.tsx                # Punto de entrada
+│   └── index.css               # Estilos globales
+├── .env                        # Variables de entorno
 ├── index.html
 ├── package.json
 ├── tsconfig.json
-├── vite.config.ts
-└── tailwind.config.js
+└── vite.config.ts
 ```
+
+## Arquitectura: Feature-based
+
+Cada feature (auth, categorias, ingredientes, productos, pedidos) es un módulo independiente que contiene:
+
+- **pages/**: Componentes de página (rutas)
+- **components/**: Componentes de UI específicos del dominio
+- **services/**: Llamadas a la API (Axios)
+- **context/**, **hooks/**: Estado y lógica del dominio (solo auth)
 
 ## Instalación
 
-1. Instalar dependencias:
 ```bash
 pnpm install
-# o
-npm install
 ```
 
-2. Iniciar servidor de desarrollo:
+## Desarrollo
+
 ```bash
 pnpm dev
 ```
 
 La aplicación estará disponible en `http://localhost:5173`
 
-## Características
+## Variables de Entorno
 
-### Gestión de Productos
-- Listado con paginación
-- Filtrado por disponibilidad
-- Crear, editar, eliminar productos
-- Asociación con categorías
-- Modal de detalles
-
-### Gestión de Categorías
-- Listado con paginación
-- Crear, editar, eliminar categorías
-- Modal de detalles
-
-### Gestión de Ingredientes
-- Listado con paginación
-- Filtrado por alérgenos
-- Crear, editar, eliminar ingredientes
-- Indicador visual de alérgenos
-
-### UI/UX
-- Diseño responsive con Tailwind CSS
-- Validación de formularios en tiempo real
-- Estados de carga y error
-- Confirmación para acciones destructivas
-- Alertas visuales para errores
-
-## Páginas
-
-### Productos (`/productos`)
-- Tabla con listados de productos
-- Filtro por disponibilidad
-- Navegación por páginas
-- Acciones: Ver, Editar, Eliminar
-
-### Categorías (`/categorias`)
-- Grid/listado de categorías
-- Navegación por páginas
-- Acciones: Ver, Editar, Eliminar
-
-### Ingredientes (`/ingredientes`)
-- Listado de ingredientes
-- Filtro por alérgenos
-- Navegación por páginas
-- Indicador visual de alérgenos
-- Acciones: Ver, Editar, Eliminar
-
-## Integración con API
-
-El frontend se comunica con el backend en `http://localhost:8000`:
-
-```typescript
-// Ejemplo de fetching
-import { fetchApi } from './lib/api';
-
-const productos = await fetchApi<Producto[]>('/productos/', {
-  skip: 0,
-  limit: 20,
-  disponible: true,
-});
+```env
+VITE_API_URL=http://localhost:8000
 ```
 
-## Scripts Disponibles
+## Rutas
+
+| Ruta | Acceso | Descripción |
+|------|--------|-------------|
+| `/` | Público | Redirige a `/categorias` |
+| `/categorias` | Protegido | CRUD de categorías |
+| `/productos` | Protegido | CRUD de productos |
+| `/ingredientes` | Protegido | CRUD de ingredientes |
+| `/pedidos` | Protegido | Listado de pedidos |
+| `/login` | Público | Inicio de sesión |
+| `/register` | Público | Registro de usuario |
+
+## Autenticación
+
+- Login con email y password (JWT via cookies HttpOnly)
+- Registro de nuevos usuarios
+- Protección de rutas con `ProtectedRoute`
+- Redirect a login si no hay sesión activa
+- Botón de logout en el Navbar
+
+## Scripts
 
 | Comando | Descripción |
 |---------|-------------|
@@ -139,49 +123,8 @@ const productos = await fetchApi<Producto[]>('/productos/', {
 | `pnpm lint` | Ejecutar linter |
 | `pnpm preview` | Previsualizar build |
 
-## Configuración
+## Backend
 
-### Variables de Entorno
-```env
-VITE_API_URL=http://localhost:8000
-```
+El backend corre en `http://localhost:8000`. Documentación en `/docs` (Swagger) o `/redoc`.
 
-### Puerto
-El servidor de desarrollo corre en `5173` por defecto.
-
-## Componentes Principales
-
-### ProductoCard / CategoriaCard / IngredienteCard
-Tarjetas individuales para mostrar cada entidad.
-
-### ProductoList / CategoriaList / IngredienteList
-Listados que reciben datos y callbacks de acciones.
-
-### ProductoModal / CategoriaModal / IngredienteModal
-Formularios para crear y editar entidades.
-
-### ConfirmModal
-Modal de confirmación para acciones destructivas.
-
-### FormAlert
-Componente reutilizable para mostrar errores.
-
-## Estado con TanStack Query
-
-```typescript
-// Query con cache
-const { data, isLoading, error } = useQuery({
-  queryKey: ['productos', pagination],
-  queryFn: () => fetchApi('/productos/', pagination),
-});
-
-// Mutation con invalidación de caché
-const mutation = useMutation({
-  mutationFn: (data) => createProducto(data),
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['productos'] });
-  },
-});
-```
-
-
+Ver `../FS-backend/README.md` para más detalles.

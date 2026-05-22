@@ -5,6 +5,7 @@ from datetime import datetime
 
 class Categoria(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+    parent_id: Optional[int] = Field(foreign_key="categoria.id", default=None)
 
     nombre: str
     descripcion: str

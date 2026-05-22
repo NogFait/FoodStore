@@ -1,17 +1,3 @@
-"""
-Service de Usuario — lógica de negocio.
-
-Stateless, orquesta operaciones sobre los repositorios a través del UoW.
-Lanza HTTPException. No hace commit/rollback directamente.
-
-Capa: Service
-Conoce a: UoW, Repository (indirectamente vía UoW)
-NO conoce a: Router
-
-Regla de imports:
-    Router → Service → UoW → Repository → Model
-"""
-
 from fastapi import HTTPException, status
 
 from app.core.config import settings
@@ -19,16 +5,14 @@ from app.core.security import hash_password, verify_password, create_access_toke
 from app.core.unit_of_work import UnitOfWork
 from app.usuarios.model import Usuario
 from app.usuarios.schema import UserCreate, Token, UserPublic
+from app.usuario_rol.model import UsuarioRol
 
 
 class UsuarioService:
-    """Lógica de negocio para autenticación y gestión de usuarios."""
-
     def __init__(self, uow: UnitOfWork):
         self.uow = uow
 
     def register(self, user_in: UserCreate):
-        """Registra un nuevo usuario. El rol siempre es 'user'."""
         if self.uow.usuarios.get_by_username(user_in.username):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -46,14 +30,19 @@ class UsuarioService:
             full_name=user_in.full_name,
             email=user_in.email,
             hashed_password=hash_password(user_in.password),
-            role="user",
         )
 
-        rta = UserPublic.model_validate(self.uow.usuarios.add(usuario))
-        return rta
+        nuevo = self.uow.usuarios.add(usuario)
+
+        usuario_rol = UsuarioRol(
+            usuario_id=nuevo.id,
+            rol_codigo="user",
+        )
+        self.uow.usuarios_roles.add(usuario_rol)
+
+        return UserPublic.model_validate(nuevo)
 
     def authenticate(self, username: str, password: str) -> Token:
-        """Autentica con username/email + password y retorna un Token con JWT."""
         user = self.uow.usuarios.get_by_username(username)
         if not user:
             user = self.uow.usuarios.get_by_email(username)
@@ -71,8 +60,10 @@ class UsuarioService:
                 detail="Cuenta de usuario desactivada",
             )
 
+        roles = [ur.rol_codigo for ur in self.uow.usuarios.get_roles(user.id)]
+
         access_token = create_access_token(
-            data={"sub": user.username, "role": user.role}
+            data={"sub": user.username, "roles": roles}
         )
         return Token(
             access_token=access_token,
@@ -81,11 +72,9 @@ class UsuarioService:
         )
 
     def list_all(self) -> list[Usuario]:
-        """Lista todos los usuarios."""
         return self.uow.usuarios.get_all()
 
     def set_disabled(self, user_id: int, disabled: bool) -> Usuario:
-        """Activa o desactiva la cuenta de un usuario."""
         user = self.uow.usuarios.get_by_id(user_id)
         if not user:
             raise HTTPException(

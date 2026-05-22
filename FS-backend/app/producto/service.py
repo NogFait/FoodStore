@@ -7,6 +7,7 @@ from app.producto.schema import ProductoCreate, ProductoUpdate, ProductoResponse
 from app.producto.unit_of_work import ProductoUnitOfWork
 from app.categoria.model import Categoria
 from app.ingrediente.model import Ingrediente
+from app.producto_ingrediente.model import ProductoIngrediente
 from datetime import datetime
 
 
@@ -19,6 +20,30 @@ class ProductoService:
         if not producto:
             raise HTTPException(status_code=404, detail="Producto no encontrado")
         return producto
+
+    def _sync_ingredientes(self, uow: ProductoUnitOfWork, producto: Producto, ingredientes_data: list) -> None:
+        existing_ids = {pi.ingrediente_id for pi in producto.producto_ingredientes}
+        new_ids = {i.ingrediente_id for i in ingredientes_data}
+
+        to_delete = [pi for pi in producto.producto_ingredientes if pi.ingrediente_id not in new_ids]
+        for pi in to_delete:
+            uow.session.delete(pi)
+
+        for item in ingredientes_data:
+            if item.ingrediente_id in existing_ids:
+                pi = next(pi for pi in producto.producto_ingredientes if pi.ingrediente_id == item.ingrediente_id)
+                pi.cantidad = item.cantidad
+                pi.unidad_medida_id = item.unidad_medida_id
+                pi.es_removible = item.es_removible
+            else:
+                pi = ProductoIngrediente(
+                    producto_id=producto.id,
+                    ingrediente_id=item.ingrediente_id,
+                    cantidad=item.cantidad,
+                    unidad_medida_id=item.unidad_medida_id,
+                    es_removible=item.es_removible,
+                )
+                uow.session.add(pi)
 
     def create(self, data: ProductoCreate) -> Producto:
         with ProductoUnitOfWork(self._session) as uow:
@@ -37,29 +62,33 @@ class ProductoService:
                 )
                 producto.categorias = categorias
 
-            if hasattr(data, "ingredientes_ids") and data.ingredientes_ids:
-                ingredientes = list(
-                    uow.session.exec(
-                        select(Ingrediente).where(Ingrediente.id.in_(data.ingredientes_ids))
-                    ).all()
-                )
-                producto.ingredientes = ingredientes
-
             uow.productos.add(producto)
+            uow.session.flush()
+
+            if data.ingredientes:
+                for item in data.ingredientes:
+                    pi = ProductoIngrediente(
+                        producto_id=producto.id,
+                        ingrediente_id=item.ingrediente_id,
+                        cantidad=item.cantidad,
+                        unidad_medida_id=item.unidad_medida_id,
+                        es_removible=item.es_removible,
+                    )
+                    uow.session.add(pi)
+
             return ProductoResponse.model_validate(producto)
 
     def get_by_id(self, producto_id: int) -> Producto:
         with ProductoUnitOfWork(self._session) as uow:
-            producto = self._get_or_404(uow, producto_id)
-            return producto
+            return self._get_or_404(uow, producto_id)
 
     def list(self, skip: int = 0, limit: int = 20, disponible: Optional[bool] = None) -> list[Producto]:
         with ProductoUnitOfWork(self._session) as uow:
             productos = uow.productos.get_all()
-            
+
             if disponible is not None:
                 productos = [p for p in productos if p.disponible == disponible]
-            
+
             return list(productos)[skip : skip + limit]
 
     def update(self, producto_id: int, data: ProductoUpdate) -> Producto:
@@ -78,15 +107,10 @@ class ProductoService:
                     )
                     producto.categorias = categorias
 
-            if "ingredientes_ids" in update_data:
-                ingredientes_ids = update_data.pop("ingredientes_ids")
-                if ingredientes_ids is not None:
-                    ingredientes = list(
-                        uow.session.exec(
-                            select(Ingrediente).where(Ingrediente.id.in_(ingredientes_ids))
-                        ).all()
-                    )
-                    producto.ingredientes = ingredientes
+            if "ingredientes" in update_data:
+                ingredientes_data = update_data.pop("ingredientes")
+                if ingredientes_data is not None:
+                    self._sync_ingredientes(uow, producto, ingredientes_data)
 
             for field, value in update_data.items():
                 setattr(producto, field, value)

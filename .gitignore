@@ -12,8 +12,9 @@ dist
 dist-ssr
 *.local
 *.zip
-*.env
-.env*
+.env
+.env.local
+.env.production
 
 # Editor directories and files
 .vscode/*
@@ -25,6 +26,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+
+*.svg
+
 
 
 # Python

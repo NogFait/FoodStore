@@ -17,44 +17,24 @@ from datetime import datetime, timedelta, timezone
 # Librería para JWT (encode/decode + manejo de errores)
 from jose import JWTError, jwt
 
-# Contexto de hashing (abstracción sobre bcrypt)
-from passlib.context import CryptContext
-
-# Configuración central (SECRET_KEY, ALGORITHM, expiración, etc.)
 from app.core.config import settings
+
+import bcrypt
+import hashlib
+import secrets
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # HASHING DE CONTRASEÑAS (bcrypt)
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Configura el contexto de hashing:
-# - "bcrypt" → algoritmo seguro para contraseñas
-# - deprecated="auto" → permite migraciones futuras de algoritmo
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 def hash_password(plain: str) -> str:
-    """
-    Recibe una contraseña en texto plano y devuelve su hash bcrypt.
-
-    Importante:
-    - bcrypt incluye salt automáticamente
-    - cada hash generado para el mismo input es distinto
-    """
-    return pwd_context.hash(plain)
+    return bcrypt.hashpw(plain.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    """
-    Verifica si una contraseña en texto plano coincide con un hash.
-
-    Internamente:
-    - Extrae el salt del hash
-    - Recalcula el hash
-    - Compara de forma segura (timing-attack safe)
-    """
-    return pwd_context.verify(plain, hashed)
+    return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -139,3 +119,17 @@ def decode_access_token(token: str) -> dict | None:
     except JWTError:
         # Cualquier problema (firma, expiración, formato, etc.)
         return None
+    
+
+def hash_token(token: str) -> str:
+    """SHA-256 del token para almacenar en DB."""
+    return hashlib.sha256(token.encode()).hexdigest()
+
+def generate_refresh_token() -> str:
+    """Genera un token aleatorio seguro de 32 bytes."""
+    return secrets.token_urlsafe(32)
+
+def create_refresh_token_pair() -> tuple[str, str]:
+    """Genera par (token_plano, token_hash). El hash va a DB, el plano a la cookie."""
+    token = generate_refresh_token()
+    return token, hash_token(token)

@@ -1,20 +1,27 @@
-"""
-Modelo de Usuario — tabla 'usuario' en PostgreSQL.
+from typing import List
+from sqlmodel import SQLModel, Field, Relationship
 
-Campos clave para seguridad:
-  - hashed_password: hash bcrypt (nunca texto plano).
-  - role: "user" | "admin" — usado por require_role() para RBAC.
-  - disabled: permite desactivar cuentas sin eliminarlas.
-"""
-
-from sqlmodel import SQLModel, Field
+from app.usuario_rol.model import UsuarioRol
+from app.direccion.model import DireccionEntrega
+from app.refresh_token.model import RefreshToken
 
 class Usuario(SQLModel, table=True):
     id:              int | None = Field(default=None, primary_key=True)
     username:        str        = Field(index=True, unique=True)
     full_name:       str
-    email:           str        = Field(index=True, unique=True)  
+    email:           str        = Field(index=True, unique=True)
     hashed_password: str
-    role:            str        = Field(default="user")           # "user" | "admin"
     disabled:        bool       = Field(default=False)
 
+    roles: List["Rol"] = Relationship(
+        back_populates="usuarios",
+        link_model=UsuarioRol,
+        sa_relationship_kwargs={
+            "primaryjoin": "Usuario.id == UsuarioRol.usuario_id",
+            "secondaryjoin": "UsuarioRol.rol_codigo == Rol.codigo",
+        },
+    )
+
+    direcciones: List["DireccionEntrega"] = Relationship(back_populates="usuario")
+
+    refresh_tokens: List["RefreshToken"] = Relationship(back_populates="usuario")
