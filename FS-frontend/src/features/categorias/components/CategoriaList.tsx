@@ -11,9 +11,11 @@ type CategoriaListProps = {
 
 type TreeNode = Categoria & { depth: number; isLast: boolean[] };
 
+// esta funcion ahora tiene una validacion para verificar si la BBDD esta vacia no se rompa por no devolver un array.
 function buildTree(categorias: Categoria[]): TreeNode[] {
+  const safeCategorias = Array.isArray(categorias) ? categorias : [];
   const map = new Map<number | null, Categoria[]>();
-  categorias.forEach((c) => {
+  safeCategorias.forEach((c) => {
     const k = c.parent_id ?? null;
     if (!map.has(k)) map.set(k, []);
     map.get(k)!.push(c);

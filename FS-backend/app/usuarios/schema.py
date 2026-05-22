@@ -21,7 +21,9 @@ class UserPublic(SQLModel):
     @field_validator("roles", mode="before")
     @classmethod
     def coerce_roles(cls, v: Any) -> List[str]:
-        if v and hasattr(v[0], "codigo"):
+        if not v:
+            return []
+        if hasattr(v[0], "codigo"):
             return [r.codigo for r in v]
         return v
 

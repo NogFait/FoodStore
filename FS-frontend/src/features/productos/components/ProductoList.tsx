@@ -14,7 +14,10 @@ type ProductoListProps = {
   isAdmin: boolean;
 };
 
-const ProductoList = ({ productos, categorias, ingredientes, onEdit, onDelete, onView, isAdmin }: ProductoListProps) => {
+const ProductoList = ({ productos = [], categorias = [], ingredientes = [], onEdit, onDelete, onView, isAdmin }: ProductoListProps) => {
+  const safeProductos = Array.isArray(productos) ? productos : [];
+  const safeCategorias = Array.isArray(categorias) ? categorias : [];
+  const safeIngredientes = Array.isArray(ingredientes) ? ingredientes : [];
   const columns = useMemo(
     () => [
       {
@@ -27,11 +30,11 @@ const ProductoList = ({ productos, categorias, ingredientes, onEdit, onDelete, o
       },
       {
         header: "Categorías",
-        accessorFn: (row: Producto) => row.categorias_ids?.map(id => categorias.find(c => c.id === id)?.nombre).join(", ") || "—",
+        accessorFn: (row: Producto) => row.categorias_ids?.map(id => safeCategorias.find(c => c.id === id)?.nombre).join(", ") || "—",
       },
       {
         header: "Ingredientes",
-        accessorFn: (row: Producto) => row.ingredientes_ids?.map(id => ingredientes.find(i => i.id === id)?.nombre).join(", ") || "—",
+        accessorFn: (row: Producto) => row.ingredientes_ids?.map(id => safeIngredientes.find(i => i.id === id)?.nombre).join(", ") || "—",
       },
       {
         header: "Precio",
@@ -75,7 +78,7 @@ const ProductoList = ({ productos, categorias, ingredientes, onEdit, onDelete, o
   );
 
   const table = useReactTable({
-    data: productos,
+    data: safeProductos,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });

@@ -10,6 +10,8 @@ type DireccionListProps = {
 };
 
 const DireccionList = ({ direcciones, onEdit, onDelete, onView }: DireccionListProps) => {
+  // aca repetimos las validaciones para que no explote el front si el back no responde con algo y no explote, lo pasamos a array vacio
+  const safeDirecciones = Array.isArray(direcciones) ? direcciones : [];
   const columns = useMemo(
     () => [
       {
@@ -68,7 +70,8 @@ const DireccionList = ({ direcciones, onEdit, onDelete, onView }: DireccionListP
   );
 
   const table = useReactTable({
-    data: direcciones,
+    // le pasamos las direcciones validadas como array vacio si no viene nada de la BBD y el back
+    data: safeDirecciones,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });

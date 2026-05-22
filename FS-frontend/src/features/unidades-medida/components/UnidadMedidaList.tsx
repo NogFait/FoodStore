@@ -11,6 +11,7 @@ type UnidadMedidaListProps = {
 };
 
 const UnidadMedidaList = ({ unidades, onEdit, onDelete, onView, isAdmin }: UnidadMedidaListProps) => {
+  const safeUnidades = Array.isArray(unidades) ? unidades : [];
   const columns = useMemo(
     () => [
       {
@@ -63,7 +64,7 @@ const UnidadMedidaList = ({ unidades, onEdit, onDelete, onView, isAdmin }: Unida
   );
 
   const table = useReactTable({
-    data: unidades,
+    data: safeUnidades,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });

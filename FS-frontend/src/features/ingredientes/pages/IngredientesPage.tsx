@@ -18,7 +18,7 @@ type ModalState =
 const IngredientesPage = () => {
   const [modal, setModal] = useState<ModalState>({ type: "none" });
   const { user } = useAuth();
-  const isAdmin = user?.roles.includes("admin") ?? false;
+  const isAdmin = user?.roles?.includes("admin") ?? false;
 
   const crud = useCrudOperations<Ingrediente>(
     ["ingredientes"],
