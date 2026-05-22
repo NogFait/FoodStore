@@ -16,6 +16,10 @@ class Usuario(SQLModel, table=True):
     roles: List["Rol"] = Relationship(
         back_populates="usuarios",
         link_model=UsuarioRol,
+        sa_relationship_kwargs={
+            "primaryjoin": "Usuario.id == UsuarioRol.usuario_id",
+            "secondaryjoin": "UsuarioRol.rol_codigo == Rol.codigo",
+        },
     )
 
     direcciones: List["DireccionEntrega"] = Relationship(back_populates="usuario")

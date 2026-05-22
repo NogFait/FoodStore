@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCrudOperations } from "../../../hooks/useCrudOperations";
 import CategoriaList from "../components/CategoriaList";
 import CategoriaModal from "../components/CategoriaModal";
 import CategoriaDetailModal from "../components/CategoriaDetailModal";
-import ConfirmModal from "../../../shared/components/ConfirmModal/ConfirmModal";
+import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
 import type { Categoria } from "../types";
 import { useAuth } from "../../auth/hooks/useAuth";
 import { getCategorias, createCategoria, updateCategoria, deleteCategoria } from "../services/categoriaService";
@@ -17,76 +17,25 @@ type ModalState =
 
 const CategoriasPage = () => {
   const [modal, setModal] = useState<ModalState>({ type: "none" });
-  const queryClient = useQueryClient();
   const { user } = useAuth();
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.roles.includes("admin") ?? false;
 
-  const [pagination, setPagination] = useState({
-    skip: 0,
-    limit: 20,
-  });
+  const crud = useCrudOperations<Categoria>(
+    ["categorias"],
+    (p) => getCategorias(p),
+    (d) => createCategoria(d as Omit<Categoria, "id">),
+    (id, d) => updateCategoria(id, d as Partial<Categoria>),
+    (id) => deleteCategoria(id),
+  );
 
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["categorias", pagination],
-    queryFn: () =>
-      getCategorias({
-        skip: pagination.skip,
-        limit: pagination.limit,
-      }),
-    staleTime: 10000 * 60,
-  });
-
-  const createMutation = useMutation({
-    mutationFn: (data: Omit<Categoria, "id">) => createCategoria(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categorias"] });
-      setModal({ type: "none" });
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => deleteCategoria(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categorias"] });
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Omit<Categoria, "id"> }) =>
-      updateCategoria(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categorias"] });
-      setModal({ type: "none" });
-    },
-  });
-
-  const handleCloseModal = () => {
-    setModal({ type: "none" });
-  };
-
-  const handleCreate = (data: { nombre: string; descripcion: string }) => {
-    createMutation.mutate(data);
-  };
-
-  const handleEdit = (categoria: Categoria) => {
-    setModal({ type: "edit", categoria });
-  };
-
-  const handleUpdate = (id: number, data: Omit<Categoria, "id">) => {
-    updateMutation.mutate({ id, data });
-  };
-
-  const handleView = (categoria: Categoria) => {
-    setModal({ type: "detail", categoria });
-  };
-
-  const handleDelete = (id: number) => {
-    setModal({ type: "confirm-delete", categoriaId: id });
-  };
+  const handleCloseModal = () => setModal({ type: "none" });
+  const handleEdit = (categoria: Categoria) => setModal({ type: "edit", categoria });
+  const handleView = (categoria: Categoria) => setModal({ type: "detail", categoria });
+  const handleDelete = (categoriaId: number) => setModal({ type: "confirm-delete", categoriaId });
 
   const handleConfirmDelete = () => {
     if (modal.type === "confirm-delete") {
-      deleteMutation.mutate(modal.categoriaId);
+      crud.deleteMutation.mutate(modal.categoriaId);
       setModal({ type: "none" });
     }
   };
@@ -98,7 +47,7 @@ const CategoriasPage = () => {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Categorías</h1>
             <p className="mt-1 text-sm text-gray-500">
-              {data ? `${data.length} categorías encontradas` : "Cargando..."}
+              {crud.data ? `${crud.data.length} categorías encontradas` : "Cargando..."}
             </p>
           </div>
           {isAdmin && (
@@ -117,18 +66,18 @@ const CategoriasPage = () => {
         <div className="flex flex-wrap items-center gap-4 mb-6 p-4 bg-white rounded-xl border border-gray-200">
           <div className="flex items-center gap-2 ml-auto">
             <button
-              onClick={() => setPagination((prev) => ({ ...prev, skip: Math.max(0, prev.skip - prev.limit) }))}
-              disabled={pagination.skip === 0}
+              onClick={() => crud.setPagination((prev) => ({ ...prev, skip: Math.max(0, prev.skip - prev.limit) }))}
+              disabled={crud.pagination.skip === 0}
               className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Anterior
             </button>
             <span className="text-sm text-gray-600">
-              Página {Math.floor(pagination.skip / pagination.limit) + 1}
+              Página {Math.floor(crud.pagination.skip / crud.pagination.limit) + 1}
             </span>
             <button
-              onClick={() => setPagination((prev) => ({ ...prev, skip: prev.skip + prev.limit }))}
-              disabled={!data || data.length < pagination.limit}
+              onClick={() => crud.setPagination((prev) => ({ ...prev, skip: prev.skip + prev.limit }))}
+              disabled={!crud.data || crud.data.length < crud.pagination.limit}
               className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Siguiente
@@ -136,22 +85,22 @@ const CategoriasPage = () => {
           </div>
         </div>
 
-        {isLoading && (
+        {crud.isLoading && (
           <div className="flex justify-center items-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent"></div>
           </div>
         )}
 
-        {error && (
+        {crud.error && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
             <p className="text-red-600 font-medium">Ocurrió un error al cargar las categorías</p>
-            <button onClick={() => refetch()} className="mt-4 text-sm text-indigo-600 hover:text-indigo-800 font-medium">
+            <button onClick={() => crud.refetch()} className="mt-4 text-sm text-indigo-600 hover:text-indigo-800 font-medium">
               Reintentar
             </button>
           </div>
         )}
 
-        {data && data.length === 0 && (
+        {crud.data && crud.data.length === 0 && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
             <svg className="mx-auto h-16 w-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -161,9 +110,9 @@ const CategoriasPage = () => {
           </div>
         )}
 
-        {data && data.length > 0 && (
+        {crud.data && crud.data.length > 0 && (
           <CategoriaList
-            categorias={data}
+            categorias={crud.data}
             onEdit={handleEdit}
             onDelete={handleDelete}
             onView={handleView}
@@ -176,7 +125,8 @@ const CategoriasPage = () => {
         <CategoriaModal
           categoria={null}
           onClose={handleCloseModal}
-          onSubmit={handleCreate}
+          onSubmit={(data) => crud.createMutation.mutate(data as any, { onSuccess: () => setModal({ type: "none" }) })}
+          categorias={crud.data || []}
         />
       )}
 
@@ -184,7 +134,8 @@ const CategoriasPage = () => {
         <CategoriaModal
           categoria={modal.categoria}
           onClose={handleCloseModal}
-          onSubmit={(data) => handleUpdate(modal.categoria.id, data)}
+          onSubmit={(data) => crud.updateMutation.mutate({ id: modal.categoria.id, data: data as any }, { onSuccess: () => setModal({ type: "none" }) })}
+          categorias={crud.data || []}
         />
       )}
 
@@ -192,6 +143,7 @@ const CategoriasPage = () => {
         <CategoriaDetailModal
           categoria={modal.categoria}
           onClose={handleCloseModal}
+          categorias={crud.data || []}
         />
       )}
 

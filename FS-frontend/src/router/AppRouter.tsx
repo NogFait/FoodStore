@@ -3,7 +3,9 @@ import { Route, Routes } from "react-router-dom";
 import ProductosPage from "../features/productos/pages/ProductosPage";
 import CategoriasPage from "../features/categorias/pages/CategoriasPage";
 import IngredientesPage from "../features/ingredientes/pages/IngredientesPage";
+import UnidadesMedidaPage from "../features/unidades-medida/pages/UnidadesMedidaPage";
 import PedidosPage from "../features/pedidos/pages/PedidosPage";
+import DireccionesPage from "../features/direcciones/pages/DireccionesPage";
 import Login from "../features/auth/pages/Login";
 import Register from "../features/auth/pages/Register";
 import { ProtectedRoute, PublicRoute } from "../features/auth/components/ProtectedRoute";
@@ -33,6 +35,22 @@ const AppRouter = () => {
         element={
           <ProtectedRoute>
             <IngredientesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/unidades-medida"
+        element={
+          <ProtectedRoute>
+            <UnidadesMedidaPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/direcciones"
+        element={
+          <ProtectedRoute>
+            <DireccionesPage />
           </ProtectedRoute>
         }
       />

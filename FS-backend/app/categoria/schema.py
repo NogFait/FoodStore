@@ -8,6 +8,7 @@ class CategoriaBase(SQLModel):
     nombre: str
     descripcion: str
     imagen_url: Optional[str] = None
+    parent_id: Optional[int] = None
 
 class CategoriaCreate(CategoriaBase):
     pass
@@ -19,3 +20,4 @@ class CategoriaUpdate(SQLModel):
     nombre: Optional[str] = None
     descripcion: Optional[str] = None
     imagen_url: Optional[str] = None
+    parent_id: Optional[int] = None

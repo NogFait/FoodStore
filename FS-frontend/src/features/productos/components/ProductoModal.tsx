@@ -1,8 +1,8 @@
-import { useEffect } from "react";
-import { useForm } from "@tanstack/react-form";
+import { useProductoForm } from "../hooks/useProductoForm";
 import type { Producto } from "../types";
 import type { Categoria } from "../../categorias/types";
 import type { Ingrediente } from "../../ingredientes/types";
+import type { UnidadMedida } from "../../unidades-medida/types";
 
 type ProductoModalProps = {
   isOpen: boolean;
@@ -11,59 +11,13 @@ type ProductoModalProps = {
   onSubmit: (data: Omit<Producto, "id">) => void;
   categorias: Categoria[];
   ingredientes: Ingrediente[];
+  unidadesMedida: UnidadMedida[];
 };
 
-const ProductoModal = ({ isOpen, producto, onClose, onSubmit, categorias, ingredientes }: ProductoModalProps) => {
-  const form = useForm({
-    defaultValues: {
-      nombre: "",
-      descripcion: "",
-      precio_base: 0,
-      stock_cantidad: 0,
-      imagenes_url: "",
-      categorias_ids: [] as number[],
-      ingredientes_ids: [] as number[],
-    },
-    onSubmit: async ({ value }) => {
-      onSubmit({
-        nombre: value.nombre,
-        descripcion: value.descripcion,
-        precio_base: value.precio_base,
-        stock_cantidad: value.stock_cantidad,
-        disponible: true,
-        imagenes_url: value.imagenes_url || undefined,
-        categorias_ids: value.categorias_ids,
-        ingredientes_ids: value.ingredientes_ids,
-      });
-    },
-  });
-
-  useEffect(() => {
-    if (isOpen) {
-      if (producto) {
-        form.setFieldValue("nombre", producto.nombre);
-        form.setFieldValue("descripcion", producto.descripcion);
-        form.setFieldValue("precio_base", producto.precio_base);
-        form.setFieldValue("stock_cantidad", producto.stock_cantidad);
-        form.setFieldValue("imagenes_url", producto.imagenes_url || "");
-        form.setFieldValue("categorias_ids", producto.categorias_ids);
-        form.setFieldValue("ingredientes_ids", producto.ingredientes_ids || []);
-      } else {
-        form.setFieldValue("nombre", "");
-        form.setFieldValue("descripcion", "");
-        form.setFieldValue("precio_base", 0);
-        form.setFieldValue("stock_cantidad", 0);
-        form.setFieldValue("imagenes_url", "");
-        form.setFieldValue("categorias_ids", []);
-        form.setFieldValue("ingredientes_ids", []);
-      }
-    }
-  }, [producto, isOpen]);
+const ProductoModal = ({ isOpen, producto, onClose, onSubmit, categorias, ingredientes, unidadesMedida }: ProductoModalProps) => {
+  const { form, titulo, toggleIngrediente, updateIngField } = useProductoForm(producto, isOpen, onSubmit);
 
   if (!isOpen) return null;
-
-  const esModoEditar = !!producto;
-  const titulo = esModoEditar ? "Editar Producto" : "Nuevo Producto";
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
@@ -133,43 +87,70 @@ const ProductoModal = ({ isOpen, producto, onClose, onSubmit, categorias, ingred
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Precio Base *</label>
-              <form.Field
-                name="precio_base"
-                validators={{
-                  onChange: ({ value }) =>
-                    isNaN(value) || value < 0 ? { message: "El precio debe ser >= 0" } : undefined,
-                }}
-                children={(field) => (
-                  <>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Precio Base *</label>
+                <form.Field
+                  name="precio_base"
+                  validators={{
+                    onChange: ({ value }) =>
+                      isNaN(value) || value < 0 ? { message: "El precio debe ser >= 0" } : undefined,
+                  }}
+                  children={(field) => (
+                    <>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(parseFloat(e.target.value) || 0)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                      />
+                      {field.state.meta.errors && (
+                        <p className="text-red-500 text-xs mt-1">{field.state.meta.errors[0]?.message}</p>
+                      )}
+                    </>
+                  )}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+                <form.Field
+                  name="stock_cantidad"
+                  children={(field) => (
                     <input
                       type="number"
-                      step="0.01"
+                      min="0"
                       value={field.state.value}
-                      onChange={(e) => field.handleChange(parseFloat(e.target.value) || 0)}
+                      onChange={(e) => field.handleChange(parseInt(e.target.value) || 0)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                     />
-                    {field.state.meta.errors && (
-                      <p className="text-red-500 text-xs mt-1">{field.state.meta.errors[0]?.message}</p>
-                    )}
-                  </>
-                )}
-              />
+                  )}
+                />
+              </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Unidad de Venta</label>
               <form.Field
-                name="stock_cantidad"
+                name="unidad_venta_id"
                 children={(field) => (
-                  <input
-                    type="number"
-                    min="0"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(parseInt(e.target.value) || 0)}
+                  <select
+                    value={field.state.value ?? ""}
+                    onChange={(e) =>
+                      field.handleChange(
+                        e.target.value ? parseInt(e.target.value) : undefined
+                      )
+                    }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                  />
+                  >
+                    <option value="">Sin unidad</option>
+                    {unidadesMedida.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.nombre} ({u.simbolo})
+                      </option>
+                    ))}
+                  </select>
                 )}
               />
             </div>
@@ -229,45 +210,105 @@ const ProductoModal = ({ isOpen, producto, onClose, onSubmit, categorias, ingred
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Ingredientes</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-gray-700">Ingredientes</label>
+                <span className="text-xs text-gray-400">
+                  {ingredientes.filter((ing) =>
+                    form.getFieldValue("ingredientes").some((i) => i.ingrediente_id === ing.id)
+                  ).length}{" "}
+                  seleccionados
+                </span>
+              </div>
               <form.Field
-                name="ingredientes_ids"
-                children={(field) => (
-                  <>
-                    <div className="flex flex-wrap gap-2">
-                      {ingredientes.map((ing) => {
-                        const isSelected = field.state.value.includes(ing.id);
-                        return (
-                          <button
-                            key={ing.id}
-                            type="button"
-                            onClick={() => {
-                              if (isSelected) {
-                                field.handleChange(field.state.value.filter((id) => id !== ing.id));
-                              } else {
-                                field.handleChange([...field.state.value, ing.id]);
-                              }
-                            }}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border ${
-                              isSelected
-                                ? ing.es_alergeno
-                                  ? "bg-amber-500 text-white border-amber-500 shadow-md"
-                                  : "bg-green-600 text-white border-green-600 shadow-md"
-                                : ing.es_alergeno
-                                ? "bg-amber-100 text-amber-700 border-amber-300 hover:border-amber-500 hover:bg-amber-50"
-                                : "bg-green-50 text-green-700 border-green-300 hover:border-green-500 hover:bg-green-50"
-                            }`}
-                          >
-                            {ing.nombre}
-                            {ing.es_alergeno && " ⚠️"}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {field.state.value.length === 0 && (
-                      <p className="text-xs text-gray-400 mt-2">Seleccioná uno o más ingredientes</p>
+                name="ingredientes"
+                children={() => (
+                  <div className="space-y-2">
+                    {ingredientes.map((ing) => {
+                      const pi = form.getFieldValue("ingredientes").find(
+                        (i) => i.ingrediente_id === ing.id
+                      );
+                      const isSelected = !!pi;
+                      return (
+                        <div
+                          key={ing.id}
+                          className={`border rounded-lg p-3 transition-all ${
+                            isSelected
+                              ? ing.es_alergeno
+                                ? "border-amber-300 bg-amber-50/50"
+                                : "border-green-300 bg-green-50/50"
+                              : "border-gray-200 hover:border-gray-300"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleIngrediente(ing.id)}
+                                className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                              />
+                              <span className="text-sm font-medium text-gray-900">{ing.nombre}</span>
+                              {ing.es_alergeno && (
+                                <span className="text-[10px] uppercase tracking-wider text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded font-semibold">
+                                  Alérgeno
+                                </span>
+                              )}
+                            </label>
+                          </div>
+
+                          {isSelected && (
+                            <div className="mt-3 ml-6 grid grid-cols-3 gap-3">
+                              <div>
+                                <label className="block text-[10px] text-gray-500 uppercase font-medium mb-0.5">Cantidad</label>
+                                <input
+                                  type="number"
+                                  step="any"
+                                  min="0"
+                                  value={pi.cantidad ?? ""}
+                                  onChange={(e) =>
+                                    updateIngField(ing.id, "cantidad", e.target.value ? parseFloat(e.target.value) : null)
+                                  }
+                                  placeholder="—"
+                                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-indigo-500 outline-none"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] text-gray-500 uppercase font-medium mb-0.5">Unidad</label>
+                                <select
+                                  value={pi.unidad_medida_id ?? ""}
+                                  onChange={(e) =>
+                                    updateIngField(ing.id, "unidad_medida_id", e.target.value ? parseInt(e.target.value) : null)
+                                  }
+                                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-indigo-500 outline-none"
+                                >
+                                  <option value="">—</option>
+                                  {unidadesMedida.map((u) => (
+                                    <option key={u.id} value={u.id}>
+                                      {u.simbolo}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="flex items-end pb-1.5">
+                                <label className="flex items-center gap-1.5 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={pi.es_removible}
+                                    onChange={(e) => updateIngField(ing.id, "es_removible", e.target.checked)}
+                                    className="w-3.5 h-3.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                  />
+                                  <span className="text-xs text-gray-500">Removible</span>
+                                </label>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {ingredientes.length === 0 && (
+                      <p className="text-xs text-gray-400">No hay ingredientes disponibles</p>
                     )}
-                  </>
+                  </div>
                 )}
               />
             </div>

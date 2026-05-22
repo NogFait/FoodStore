@@ -1,0 +1,13 @@
+export interface Direccion {
+  id: number;
+  usuario_id: number;
+  alias: string;
+  linea1: string;
+  linea2?: string | null;
+  ciudad: string;
+  provincia: string;
+  codigo_postal: string;
+  latitud?: number | null;
+  longitud?: number | null;
+  es_principal: boolean;
+}

@@ -1,14 +1,16 @@
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCrudOperations } from "../../../hooks/useCrudOperations";
 import ProductoList from "../components/ProductoList";
-import type { Producto } from "../types";
 import ProductoModal from "../components/ProductoModal";
 import ProductoDetailModal from "../components/ProductoDetailModal";
-import ConfirmModal from "../../../shared/components/ConfirmModal/ConfirmModal";
+import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
+import type { Producto } from "../types";
 import { useAuth } from "../../auth/hooks/useAuth";
 import { getProductos, createProducto, updateProducto, deleteProducto } from "../services/productoService";
 import { getCategorias } from "../../categorias/services/categoriaService";
 import { getIngredientes } from "../../ingredientes/services/ingredienteService";
+import { getUnidadesMedida } from "../../unidades-medida/services/unidadMedidaService";
+import { useQuery } from "@tanstack/react-query";
 
 type ModalState =
   | { type: "none" }
@@ -19,26 +21,17 @@ type ModalState =
 
 const ProductosPage = () => {
   const [modal, setModal] = useState<ModalState>({ type: "none" });
-  const queryClient = useQueryClient();
   const { user } = useAuth();
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.roles.includes("admin") ?? false;
 
-  const [pagination, setPagination] = useState({
-    skip: 0,
-    limit: 20,
-    disponible: undefined as boolean | undefined,
-  });
-
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["productos", pagination],
-    queryFn: () =>
-      getProductos({
-        skip: pagination.skip,
-        limit: pagination.limit,
-        disponible: pagination.disponible,
-      }),
-    staleTime: 10000 * 60,
-  });
+  const crud = useCrudOperations<Producto>(
+    ["productos"],
+    (p) => getProductos(p),
+    (d) => createProducto(d as Omit<Producto, "id">),
+    (id, d) => updateProducto(id, d as Partial<Producto>),
+    (id) => deleteProducto(id),
+    [["categorias"], ["ingredientes"]],
+  );
 
   const { data: categorias } = useQuery({
     queryKey: ["categorias"],
@@ -52,61 +45,21 @@ const ProductosPage = () => {
     staleTime: 10000 * 60,
   });
 
-  const createMutation = useMutation({
-    mutationFn: (data: Omit<Producto, "id">) => createProducto(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["productos"] });
-      queryClient.invalidateQueries({ queryKey: ["categorias"] });
-      queryClient.invalidateQueries({ queryKey: ["ingredientes"] });
-      setModal({ type: "none" });
-    },
+  const { data: unidadesMedida } = useQuery({
+    queryKey: ["unidades-medida"],
+    queryFn: () => getUnidadesMedida({ limit: 100 }),
+    staleTime: 10000 * 60,
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => deleteProducto(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["productos"] });
-    },
-  });
+  const handleCloseModal = () => setModal({ type: "none" });
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Omit<Producto, "id"> }) =>
-      updateProducto(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["productos"] });
-      queryClient.invalidateQueries({ queryKey: ["categorias"] });
-      queryClient.invalidateQueries({ queryKey: ["ingredientes"] });
-      setModal({ type: "none" });
-    },
-  });
-
-  const handleCloseModal = () => {
-    setModal({ type: "none" });
-  };
-
-  const handleCreate = (data: Omit<Producto, "id">) => {
-    createMutation.mutate(data);
-  };
-
-  const handleUpdate = (id: number, data: Omit<Producto, "id">) => {
-    updateMutation.mutate({ id, data });
-  };
-
-  const handleEdit = (producto: Producto) => {
-    setModal({ type: "edit", producto });
-  };
-
-  const handleView = (producto: Producto) => {
-    setModal({ type: "detail", producto });
-  };
-
-  const handleDelete = (id: number) => {
-    setModal({ type: "confirm-delete", productoId: id });
-  };
+  const handleEdit = (producto: Producto) => setModal({ type: "edit", producto });
+  const handleView = (producto: Producto) => setModal({ type: "detail", producto });
+  const handleDelete = (productoId: number) => setModal({ type: "confirm-delete", productoId });
 
   const handleConfirmDelete = () => {
     if (modal.type === "confirm-delete") {
-      deleteMutation.mutate(modal.productoId);
+      crud.deleteMutation.mutate(modal.productoId);
       setModal({ type: "none" });
     }
   };
@@ -118,7 +71,7 @@ const ProductosPage = () => {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Productos</h1>
             <p className="mt-1 text-sm text-gray-500">
-              {data ? `${data.length} productos encontrados` : "Cargando..."}
+              {crud.data ? `${crud.data.length} productos encontrados` : "Cargando..."}
             </p>
           </div>
           {isAdmin && (
@@ -138,10 +91,10 @@ const ProductosPage = () => {
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium text-gray-700">Disponibilidad:</label>
             <select
-              value={pagination.disponible === undefined ? "" : String(pagination.disponible)}
+              value={crud.pagination.disponible === undefined ? "" : String(crud.pagination.disponible)}
               onChange={(e) => {
                 const val = e.target.value;
-                setPagination((prev) => ({
+                crud.setPagination((prev) => ({
                   ...prev,
                   disponible: val === "" ? undefined : val === "true",
                   skip: 0,
@@ -157,18 +110,18 @@ const ProductosPage = () => {
 
           <div className="flex items-center gap-2 ml-auto">
             <button
-              onClick={() => setPagination((prev) => ({ ...prev, skip: Math.max(0, prev.skip - prev.limit) }))}
-              disabled={pagination.skip === 0}
+              onClick={() => crud.setPagination((prev) => ({ ...prev, skip: Math.max(0, prev.skip - prev.limit) }))}
+              disabled={crud.pagination.skip === 0}
               className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Anterior
             </button>
             <span className="text-sm text-gray-600">
-              Página {Math.floor(pagination.skip / pagination.limit) + 1}
+              Página {Math.floor(crud.pagination.skip / crud.pagination.limit) + 1}
             </span>
             <button
-              onClick={() => setPagination((prev) => ({ ...prev, skip: prev.skip + prev.limit }))}
-              disabled={!data || data.length < pagination.limit}
+              onClick={() => crud.setPagination((prev) => ({ ...prev, skip: prev.skip + prev.limit }))}
+              disabled={!crud.data || crud.data.length < crud.pagination.limit}
               className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Siguiente
@@ -176,25 +129,25 @@ const ProductosPage = () => {
           </div>
         </div>
 
-        {isLoading && (
+        {crud.isLoading && (
           <div className="flex justify-center items-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent"></div>
           </div>
         )}
 
-        {error && (
+        {crud.error && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
             <svg className="mx-auto h-12 w-12 text-red-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
             <p className="text-red-600 font-medium">Ocurrio un error al cargar los productos</p>
-            <button onClick={() => refetch()} className="mt-4 text-sm text-indigo-600 hover:text-indigo-800 font-medium">
+            <button onClick={() => crud.refetch()} className="mt-4 text-sm text-indigo-600 hover:text-indigo-800 font-medium">
               Reintentar
             </button>
           </div>
         )}
 
-        {data && data.length === 0 && (
+        {crud.data && crud.data.length === 0 && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
             <svg className="mx-auto h-16 w-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -204,9 +157,9 @@ const ProductosPage = () => {
           </div>
         )}
 
-        {data && data.length > 0 && (
+        {crud.data && crud.data.length > 0 && (
           <ProductoList
-            productos={data}
+            productos={crud.data}
             categorias={categorias || []}
             ingredientes={ingredientes || []}
             onEdit={handleEdit}
@@ -222,9 +175,10 @@ const ProductosPage = () => {
           isOpen={modal.type === "create"}
           producto={null}
           onClose={handleCloseModal}
-          onSubmit={handleCreate}
+          onSubmit={(data) => crud.createMutation.mutate(data as any, { onSuccess: () => setModal({ type: "none" }) })}
           categorias={categorias || []}
           ingredientes={ingredientes || []}
+          unidadesMedida={unidadesMedida || []}
         />
       )}
 
@@ -233,9 +187,10 @@ const ProductosPage = () => {
           isOpen={modal.type === "edit"}
           producto={modal.producto}
           onClose={handleCloseModal}
-          onSubmit={(data) => handleUpdate(modal.producto.id, data)}
+          onSubmit={(data) => crud.updateMutation.mutate({ id: modal.producto.id, data: data as any }, { onSuccess: () => setModal({ type: "none" }) })}
           categorias={categorias || []}
           ingredientes={ingredientes || []}
+          unidadesMedida={unidadesMedida || []}
         />
       )}
 
@@ -244,6 +199,7 @@ const ProductosPage = () => {
           producto={modal.producto}
           categorias={categorias || []}
           ingredientes={ingredientes || []}
+          unidadesMedida={unidadesMedida || []}
           onClose={handleCloseModal}
         />
       )}

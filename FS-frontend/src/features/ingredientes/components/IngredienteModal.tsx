@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { useForm } from "@tanstack/react-form";
+import { useIngredienteForm } from "../hooks/useIngredienteForm";
 import type { Ingrediente } from "../types";
 
 type IngredienteModalProps = {
@@ -10,39 +9,9 @@ type IngredienteModalProps = {
 };
 
 const IngredienteModal = ({ isOpen, ingrediente, onClose, onSubmit }: IngredienteModalProps) => {
-  const form = useForm({
-    defaultValues: {
-      nombre: "",
-      descripcion: "",
-      es_alergeno: false,
-    },
-    onSubmit: async ({ value }) => {
-      onSubmit({
-        nombre: value.nombre,
-        descripcion: value.descripcion,
-        es_alergeno: value.es_alergeno,
-      });
-    },
-  });
-
-  useEffect(() => {
-    if (isOpen) {
-      if (ingrediente) {
-        form.setFieldValue("nombre", ingrediente.nombre);
-        form.setFieldValue("descripcion", ingrediente.descripcion);
-        form.setFieldValue("es_alergeno", ingrediente.es_alergeno);
-      } else {
-        form.setFieldValue("nombre", "");
-        form.setFieldValue("descripcion", "");
-        form.setFieldValue("es_alergeno", false);
-      }
-    }
-  }, [ingrediente, isOpen]);
+  const { form, titulo } = useIngredienteForm(ingrediente, isOpen, onSubmit);
 
   if (!isOpen) return null;
-
-  const esModoEditar = !!ingrediente;
-  const titulo = esModoEditar ? "Editar Ingrediente" : "Nuevo Ingrediente";
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">

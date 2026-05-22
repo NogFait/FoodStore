@@ -1,42 +1,15 @@
-import { useEffect } from "react";
-import { useForm } from "@tanstack/react-form";
+import { useCategoriaForm } from "../hooks/useCategoriaForm";
 import type { Categoria } from "../types";
 
 type CategoriaModalProps = {
   categoria: Categoria | null;
   onClose: () => void;
-  onSubmit: (data: { nombre: string; descripcion: string; imagen_url?: string }) => void;
+  onSubmit: (data: { nombre: string; descripcion: string; imagen_url?: string; parent_id?: number | null }) => void;
+  categorias: Categoria[];
 };
 
-const CategoriaModal = ({ categoria, onClose, onSubmit }: CategoriaModalProps) => {
-  const form = useForm({
-    defaultValues: {
-      nombre: "",
-      descripcion: "",
-      imagen_url: "",
-    },
-    onSubmit: async ({ value }) => {
-      onSubmit({
-        nombre: value.nombre,
-        descripcion: value.descripcion,
-        imagen_url: value.imagen_url || undefined,
-      });
-    },
-  });
-
-  useEffect(() => {
-    if (categoria) {
-      form.setFieldValue("nombre", categoria.nombre);
-      form.setFieldValue("descripcion", categoria.descripcion);
-      form.setFieldValue("imagen_url", categoria.imagen_url || "");
-    } else {
-      form.setFieldValue("nombre", "");
-      form.setFieldValue("descripcion", "");
-      form.setFieldValue("imagen_url", "");
-    }
-  }, [categoria]);
-
-  const esModoEditar = !!categoria;
+const CategoriaModal = ({ categoria, onClose, onSubmit, categorias }: CategoriaModalProps) => {
+  const { form, esModoEditar, parentOptions } = useCategoriaForm(categoria, categorias, onSubmit);
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
@@ -120,6 +93,34 @@ const CategoriaModal = ({ categoria, onClose, onSubmit }: CategoriaModalProps) =
                   />
                 )}
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Categoría Padre</label>
+              <form.Field
+                name="parent_id"
+                children={(field) => (
+                  <select
+                    value={field.state.value ?? ""}
+                    onChange={(e) =>
+                      field.handleChange(
+                        e.target.value ? parseInt(e.target.value) : null
+                      )
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  >
+                    <option value="">Sin padre (categoría raíz)</option>
+                    {parentOptions.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {"- ".repeat(cat.depth)}{cat.nombre}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Dejá vacío para crear una categoría raíz
+              </p>
             </div>
           </div>
 

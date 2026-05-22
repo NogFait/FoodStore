@@ -1,5 +1,6 @@
 import { useLocation } from "react-router-dom";
-import Navbar from "./shared/components/Navbar/Navbar";
+import Navbar from "./components/Navbar/Navbar";
+import Sidebar from "./components/Sidebar/Sidebar";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AppRouter from "./router/AppRouter";
 import { AuthProvider } from "./features/auth/context/AuthContext";
@@ -14,7 +15,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         {!hideNavbar && <Navbar />}
-        <AppRouter />
+        <div className="flex">
+          {!hideNavbar && <Sidebar />}
+          <main className="flex-1 min-h-[calc(100vh-4rem)]">
+            <AppRouter />
+          </main>
+        </div>
       </AuthProvider>
     </QueryClientProvider>
   );
