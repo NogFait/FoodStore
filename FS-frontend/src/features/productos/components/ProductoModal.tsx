@@ -130,6 +130,36 @@ const ProductoModal = ({ isOpen, producto, onClose, onSubmit, categorias, ingred
               </div>
             </div>
 
+            <form.Field
+              name="disponible"
+              children={(field) => (
+                <label
+                  className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                    field.state.value
+                      ? "border-green-300 bg-green-50/50 hover:border-green-400"
+                      : "border-gray-200 bg-gray-50 hover:border-gray-300"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.checked)}
+                    className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <div className="flex-1">
+                    <span className="block text-sm font-medium text-gray-900">
+                      Disponible para la venta
+                    </span>
+                    <span className="block text-xs text-gray-500 mt-0.5">
+                      {field.state.value
+                        ? "El producto aparece en el menú público"
+                        : "El producto está oculto del menú público"}
+                    </span>
+                  </div>
+                </label>
+              )}
+            />
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Unidad de Venta</label>
               <form.Field
@@ -212,19 +242,21 @@ const ProductoModal = ({ isOpen, producto, onClose, onSubmit, categorias, ingred
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-medium text-gray-700">Ingredientes</label>
-                <span className="text-xs text-gray-400">
-                  {ingredientes.filter((ing) =>
-                    form.getFieldValue("ingredientes").some((i) => i.ingrediente_id === ing.id)
-                  ).length}{" "}
-                  seleccionados
-                </span>
+                <form.Subscribe
+                  selector={(state) => state.values.ingredientes}
+                  children={(seleccionados) => (
+                    <span className="text-xs text-gray-400">
+                      {seleccionados.length} seleccionados
+                    </span>
+                  )}
+                />
               </div>
               <form.Field
                 name="ingredientes"
-                children={() => (
+                children={(field) => (
                   <div className="space-y-2">
                     {ingredientes.map((ing) => {
-                      const pi = form.getFieldValue("ingredientes").find(
+                      const pi = field.state.value.find(
                         (i) => i.ingrediente_id === ing.id
                       );
                       const isSelected = !!pi;

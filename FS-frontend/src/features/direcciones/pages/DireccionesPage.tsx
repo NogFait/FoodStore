@@ -1,12 +1,10 @@
 import { useState } from "react";
-import { useCrudOperations } from "../../../hooks/useCrudOperations";
 import DireccionList from "../components/DireccionList";
 import DireccionModal from "../components/DireccionModal";
 import DireccionDetailModal from "../components/DireccionDetailModal";
 import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
 import type { Direccion } from "../types";
-import { getDirecciones, createDireccion, updateDireccion, deleteDireccion } from "../services/direccionService";
-
+import { useDireccion } from "../hooks/useDirecciones";
 type ModalState =
   | { type: "none" }
   | { type: "create" }
@@ -17,14 +15,7 @@ type ModalState =
 const DireccionesPage = () => {
   const [modal, setModal] = useState<ModalState>({ type: "none" });
 
-  const crud = useCrudOperations<Direccion>(
-    ["direcciones"],
-    (p) => getDirecciones(p),
-    (d) => createDireccion(d as Omit<Direccion, "id" | "usuario_id">),
-    (id, d) => updateDireccion(id, d as Partial<Direccion>),
-    (id) => deleteDireccion(id),
-  );
-
+  const crud = useDireccion();
   const handleCloseModal = () => setModal({ type: "none" });
   const handleEdit = (direccion: Direccion) => setModal({ type: "edit", direccion });
   const handleView = (direccion: Direccion) => setModal({ type: "detail", direccion });
@@ -129,7 +120,7 @@ const DireccionesPage = () => {
         <DireccionModal
           direccion={null}
           onClose={handleCloseModal}
-          onSubmit={(data) => crud.createMutation.mutate(data as any, { onSuccess: () => setModal({ type: "none" }) })}
+          onSubmit={(data) => crud.createMutation.mutate(data, { onSuccess: () => setModal({ type: "none" }) })}
         />
       )}
 
@@ -137,7 +128,7 @@ const DireccionesPage = () => {
         <DireccionModal
           direccion={modal.direccion}
           onClose={handleCloseModal}
-          onSubmit={(data) => crud.updateMutation.mutate({ id: modal.direccion.id, data: data as any }, { onSuccess: () => setModal({ type: "none" }) })}
+          onSubmit={(data) => crud.updateMutation.mutate({ id: modal.direccion.id, data: data }, { onSuccess: () => setModal({ type: "none" }) })}
         />
       )}
 

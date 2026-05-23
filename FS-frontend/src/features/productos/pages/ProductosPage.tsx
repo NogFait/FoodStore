@@ -1,16 +1,12 @@
 import { useState } from "react";
-import { useCrudOperations } from "../../../hooks/useCrudOperations";
 import ProductoList from "../components/ProductoList";
 import ProductoModal from "../components/ProductoModal";
 import ProductoDetailModal from "../components/ProductoDetailModal";
 import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
 import type { Producto } from "../types";
 import { useAuth } from "../../auth/hooks/useAuth";
-import { getProductos, createProducto, updateProducto, deleteProducto } from "../services/productoService";
-import { getCategorias } from "../../categorias/services/categoriaService";
-import { getIngredientes } from "../../ingredientes/services/ingredienteService";
-import { getUnidadesMedida } from "../../unidades-medida/services/unidadMedidaService";
-import { useQuery } from "@tanstack/react-query";
+import { useProductos } from "../hooks/useProductos";
+import { useProductoFormData } from "../hooks/useProductoFormData";
 
 type ModalState =
   | { type: "none" }
@@ -24,32 +20,9 @@ const ProductosPage = () => {
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes("admin") ?? false;
 
-  const crud = useCrudOperations<Producto>(
-    ["productos"],
-    (p) => getProductos(p),
-    (d) => createProducto(d as Omit<Producto, "id">),
-    (id, d) => updateProducto(id, d as Partial<Producto>),
-    (id) => deleteProducto(id),
-    [["categorias"], ["ingredientes"]],
-  );
+  const crud = useProductos();
 
-  const { data: categorias } = useQuery({
-    queryKey: ["categorias"],
-    queryFn: () => getCategorias({ limit: 100 }),
-    staleTime: 10000 * 60,
-  });
-
-  const { data: ingredientes } = useQuery({
-    queryKey: ["ingredientes"],
-    queryFn: () => getIngredientes({ limit: 100 }),
-    staleTime: 10000 * 60,
-  });
-
-  const { data: unidadesMedida } = useQuery({
-    queryKey: ["unidades-medida"],
-    queryFn: () => getUnidadesMedida({ limit: 100 }),
-    staleTime: 10000 * 60,
-  });
+  const {categorias, ingredientes, unidadesMedida} = useProductoFormData();
 
   const handleCloseModal = () => setModal({ type: "none" });
 
@@ -175,7 +148,9 @@ const ProductosPage = () => {
           isOpen={modal.type === "create"}
           producto={null}
           onClose={handleCloseModal}
-          onSubmit={(data) => crud.createMutation.mutate(data as any, { onSuccess: () => setModal({ type: "none" }) })}
+          onSubmit={(data) => crud.createMutation.mutate(data , { 
+            onSuccess: () => setModal({ type: "none" }) 
+          })}
           categorias={categorias || []}
           ingredientes={ingredientes || []}
           unidadesMedida={unidadesMedida || []}
@@ -187,7 +162,7 @@ const ProductosPage = () => {
           isOpen={modal.type === "edit"}
           producto={modal.producto}
           onClose={handleCloseModal}
-          onSubmit={(data) => crud.updateMutation.mutate({ id: modal.producto.id, data: data as any }, { onSuccess: () => setModal({ type: "none" }) })}
+          onSubmit={(data) => crud.updateMutation.mutate({ id: modal.producto.id, data: data }, { onSuccess: () => setModal({ type: "none" }) })}
           categorias={categorias || []}
           ingredientes={ingredientes || []}
           unidadesMedida={unidadesMedida || []}

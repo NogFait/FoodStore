@@ -1,13 +1,11 @@
 import { useState } from "react";
-import { useCrudOperations } from "../../../hooks/useCrudOperations";
 import IngredienteList from "../components/IngredienteList";
 import IngredienteModal from "../components/IngredienteModal";
 import IngredienteDetailModal from "../components/IngredienteDetailModal";
 import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
 import type { Ingrediente } from "../types";
 import { useAuth } from "../../auth/hooks/useAuth";
-import { getIngredientes, createIngrediente, updateIngrediente, deleteIngrediente } from "../services/ingredienteService";
-
+import { useIngredientes } from "../hooks/useIngredientes";
 type ModalState =
   | { type: "none" }
   | { type: "create" }
@@ -20,13 +18,7 @@ const IngredientesPage = () => {
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes("admin") ?? false;
 
-  const crud = useCrudOperations<Ingrediente>(
-    ["ingredientes"],
-    (p) => getIngredientes(p),
-    (d) => createIngrediente(d as Omit<Ingrediente, "id">),
-    (id, d) => updateIngrediente(id, d as Partial<Ingrediente>),
-    (id) => deleteIngrediente(id),
-  );
+  const crud = useIngredientes();
 
   const handleCloseModal = () => setModal({ type: "none" });
   const handleEdit = (ingrediente: Ingrediente) => setModal({ type: "edit", ingrediente });
@@ -149,7 +141,7 @@ const IngredientesPage = () => {
           isOpen={modal.type === "create"}
           ingrediente={null}
           onClose={handleCloseModal}
-          onSubmit={(data) => crud.createMutation.mutate(data as any, { onSuccess: () => setModal({ type: "none" }) })}
+          onSubmit={(data) => crud.createMutation.mutate(data, { onSuccess: () => setModal({ type: "none" }) })}
         />
       )}
 
@@ -158,7 +150,7 @@ const IngredientesPage = () => {
           isOpen={modal.type === "edit"}
           ingrediente={modal.ingrediente}
           onClose={handleCloseModal}
-          onSubmit={(data) => crud.updateMutation.mutate({ id: modal.ingrediente.id, data: data as any }, { onSuccess: () => setModal({ type: "none" }) })}
+          onSubmit={(data) => crud.updateMutation.mutate({ id: modal.ingrediente.id, data: data }, { onSuccess: () => setModal({ type: "none" }) })}
         />
       )}
 

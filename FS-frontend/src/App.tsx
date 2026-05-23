@@ -4,8 +4,17 @@ import Sidebar from "./components/Sidebar/Sidebar";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AppRouter from "./router/AppRouter";
 import { AuthProvider } from "./features/auth/context/AuthContext";
+import {toast} from "sonner"
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    mutations:{
+      onError: (error) => {
+        toast.error("Error: " + (error instanceof Error ? error.message : "Error desconocido"));
+      }
+    }
+  }
+});
 
 function App() {
   const location = useLocation();
