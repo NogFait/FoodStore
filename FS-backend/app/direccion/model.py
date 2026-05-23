@@ -1,11 +1,11 @@
 from typing import Optional
 from datetime import datetime
 from sqlmodel import SQLModel, Field, Relationship
+from app.core.base_model import BaseEntity
+from app.usuarios.model import Usuario
 
-class DireccionEntrega(SQLModel, table=True):
-    __tablename__ = "direccion_entrega"
+class DireccionEntrega(BaseEntity, table=True):
 
-    id: Optional[int] = Field(default=None, primary_key=True)
     usuario_id: int = Field(foreign_key="usuario.id", index=True)
     alias: str = Field(max_length=50)
     linea1: str
@@ -18,7 +18,3 @@ class DireccionEntrega(SQLModel, table=True):
     es_principal: bool = False
 
     usuario: "Usuario" = Relationship(back_populates="direcciones")
-
-    created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: Optional[datetime] = None
-    deleted_at: Optional[datetime] = None

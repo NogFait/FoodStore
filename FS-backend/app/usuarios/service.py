@@ -1,18 +1,19 @@
+from typing import Sequence
+
 from fastapi import HTTPException, status
 
 from app.core.config import settings
 from app.core.security import hash_password, verify_password, create_access_token
-from app.core.unit_of_work import UnitOfWork
 from app.usuarios.model import Usuario
+from app.usuarios.enums import RolEnum
 from app.usuarios.schema import UserCreate, Token, UserPublic
-from app.usuario_rol.model import UsuarioRol
-
+from app.usuarios.unit_of_work import UsuarioUnitOfWork
 
 class UsuarioService:
-    def __init__(self, uow: UnitOfWork):
+    def __init__(self, uow: UsuarioUnitOfWork):
         self.uow = uow
 
-    def register(self, user_in: UserCreate):
+    def register(self, user_in: UserCreate) -> UserPublic:
         if self.uow.usuarios.get_by_username(user_in.username):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -30,16 +31,10 @@ class UsuarioService:
             full_name=user_in.full_name,
             email=user_in.email,
             hashed_password=hash_password(user_in.password),
+            rol=RolEnum.CLIENTE,
         )
 
         nuevo = self.uow.usuarios.add(usuario)
-
-        usuario_rol = UsuarioRol(
-            usuario_id=nuevo.id,
-            rol_codigo="user",
-        )
-        self.uow.usuarios_roles.add(usuario_rol)
-
         return UserPublic.model_validate(nuevo)
 
     def authenticate(self, username: str, password: str) -> Token:
@@ -60,10 +55,9 @@ class UsuarioService:
                 detail="Cuenta de usuario desactivada",
             )
 
-        roles = [ur.rol_codigo for ur in self.uow.usuarios.get_roles(user.id)]
-
         access_token = create_access_token(
-            data={"sub": user.username, "roles": roles}
+            data={"sub": user.username, "rol": user.rol.value},
+            token_version=user.token_version,
         )
         return Token(
             access_token=access_token,
@@ -71,7 +65,7 @@ class UsuarioService:
             expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         )
 
-    def list_all(self) -> list[Usuario]:
+    def list_all(self) -> Sequence[Usuario]:
         return self.uow.usuarios.get_all()
 
     def set_disabled(self, user_id: int, disabled: bool) -> Usuario:
@@ -83,3 +77,22 @@ class UsuarioService:
             )
         user.disabled = disabled
         return self.uow.usuarios.update(user)
+
+    def set_rol(self, user_id: int, rol: RolEnum) -> Usuario:
+        user = self.uow.usuarios.get_by_id(user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Usuario no encontrado",
+            )
+        user.rol = rol
+        return self.uow.usuarios.update(user)
+    def logout(self, user_id: int) -> None:
+        user = self.uow.usuarios.get_by_id(user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Usuario no encontrado",
+            )
+        user.token_version += 1
+        self.uow.usuarios.update(user)

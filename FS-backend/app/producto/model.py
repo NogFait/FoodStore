@@ -1,15 +1,15 @@
 from typing import Optional, List
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import Field, Relationship
 
 from app.categoria.model import Categoria
 from app.ingrediente.model import Ingrediente
 from app.unidad_medida.model import UnidadMedida
 from ..producto_categoria.model import ProductoCategoria
 from ..producto_ingrediente.model import ProductoIngrediente
+from app.core.base_model import BaseEntity
 from datetime import datetime
 
-class Producto(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+class Producto(BaseEntity, table=True):
 
     nombre: str
     descripcion: str
@@ -30,9 +30,6 @@ class Producto(SQLModel, table=True):
 
     unidad_venta: Optional["UnidadMedida"] = Relationship(back_populates="productos")
 
-    created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: Optional[datetime] = None
-    deleted_at: Optional[datetime] = None
 
     @property
     def categorias_ids(self) -> List[int]:

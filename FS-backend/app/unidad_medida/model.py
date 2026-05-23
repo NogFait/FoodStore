@@ -1,15 +1,12 @@
 from typing import List
 from datetime import datetime
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import  Field, Relationship
+from app.core.base_model import BaseEntity
+from app.producto.model import Producto
+class UnidadMedida(BaseEntity, table=True):
 
-
-class UnidadMedida(SQLModel, table=True):
-    __tablename__ = "unidad_medida"
-
-    id: int | None = Field(default=None, primary_key=True)
     nombre: str = Field(max_length=50)
     simbolo: str = Field(max_length=10)
     tipo: str = Field(max_length=20)
-    created_at: datetime = Field(default_factory=datetime.now)
 
     productos: List["Producto"] = Relationship(back_populates="unidad_venta")

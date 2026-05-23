@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from fastapi import HTTPException, status
 
 from app.unidad_medida.model import UnidadMedida
@@ -21,7 +23,7 @@ class UnidadMedidaService:
             uow.unidades.add(unidad)
             return unidad
 
-    def list_all(self, skip: int = 0, limit: int = 20) -> list[UnidadMedida]:
+    def list_all(self, skip: int = 0, limit: int = 20) -> Sequence[UnidadMedida]:
         with UnidadMedidaUnitOfWork(self._session) as uow:
             return uow.unidades.get_all(offset=skip, limit=limit)
 
@@ -47,7 +49,7 @@ class UnidadMedidaService:
 def create_unidad(session, data: UnidadMedidaCreate) -> UnidadMedida:
     return UnidadMedidaService(session).create(data)
 
-def list_unidades(session, skip: int = 0, limit: int = 20) -> list[UnidadMedida]:
+def list_unidades(session, skip: int = 0, limit: int = 20) -> Sequence[UnidadMedida]:
     return UnidadMedidaService(session).list_all(skip=skip, limit=limit)
 
 def get_unidad(session, unidad_id: int) -> UnidadMedida:

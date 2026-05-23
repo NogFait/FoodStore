@@ -1,6 +1,8 @@
-from typing import List, Any
 from sqlmodel import SQLModel, Field
-from pydantic import EmailStr, field_validator
+from pydantic import EmailStr
+
+from app.usuarios.enums import RolEnum
+
 
 class UserCreate(SQLModel):
     """Datos requeridos para registrar un usuario."""
@@ -9,23 +11,21 @@ class UserCreate(SQLModel):
     email:     EmailStr
     password:  str = Field(min_length=8)
 
+
 class UserPublic(SQLModel):
     """Vista pública del usuario — excluye hashed_password."""
     id:        int
     username:  str
     full_name: str
     email:     str
-    roles:     List[str] = []
+    rol:       RolEnum
     disabled:  bool
 
-    @field_validator("roles", mode="before")
-    @classmethod
-    def coerce_roles(cls, v: Any) -> List[str]:
-        if not v:
-            return []
-        if hasattr(v[0], "codigo"):
-            return [r.codigo for r in v]
-        return v
+
+class UserRolUpdate(SQLModel):
+    """Payload para que un admin cambie el rol de otro usuario."""
+    rol: RolEnum
+
 
 class Token(SQLModel):
     """Respuesta del endpoint /token."""

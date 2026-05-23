@@ -1,6 +1,7 @@
 from typing import Annotated, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Path, Query
 from sqlmodel import Session
+from app.usuarios.enums import RolEnum
 
 from ..core.database import get_session
 from ..core.deps import get_current_active_user, require_role
@@ -20,7 +21,7 @@ router_ingrediente = APIRouter(prefix="/ingredientes", tags=["ingredientes"])
     "/",
     response_model=IngredienteResponse,
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(require_role(["admin"]))],
+    dependencies=[Depends(require_role([RolEnum.ADMIN]))],
 )
 def create(ingrediente: IngredienteCreate, session: Session = Depends(get_session)):
     return create_ingrediente(session, ingrediente)
@@ -58,7 +59,7 @@ def get_by_id(
 @router_ingrediente.patch(
     "/{ingrediente_id}",
     response_model=IngredienteResponse,
-    dependencies=[Depends(require_role(["admin"]))],
+    dependencies=[Depends(require_role([RolEnum.ADMIN]))],
 )
 def update(
     ingrediente_id: Annotated[int, Path(ge=1, description="ID del ingrediente")],
@@ -74,7 +75,7 @@ def update(
 @router_ingrediente.delete(
     "/{ingrediente_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    dependencies=[Depends(require_role(["admin"]))],
+    dependencies=[Depends(require_role([RolEnum.ADMIN]))],
 )
 def delete(
     ingrediente_id: Annotated[int, Path(ge=1, description="ID del ingrediente")],

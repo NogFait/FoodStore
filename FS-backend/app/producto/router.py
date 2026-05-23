@@ -1,7 +1,7 @@
 from typing import Annotated, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Path, Query
 from sqlmodel import Session
-
+from app.usuarios.enums import RolEnum
 from ..core.database import get_session
 from ..core.deps import get_current_active_user, require_role
 
@@ -15,7 +15,7 @@ router_producto = APIRouter(prefix="/productos",tags=["productos"])
     "/",
     response_model=ProductoResponse,
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(require_role(["admin"]))],
+    dependencies=[Depends(require_role([RolEnum.ADMIN]))],
 )
 def create(producto: ProductoCreate, session: Session = Depends(get_session)):
     return create_producto(session, producto)
@@ -53,7 +53,7 @@ def get_by_id(
 @router_producto.patch(
     "/{producto_id}",
     response_model=ProductoResponse,
-    dependencies=[Depends(require_role(["admin"]))],
+    dependencies=[Depends(require_role([RolEnum.ADMIN]))],
 )
 def update(
     producto_id: Annotated[int, Path(ge=1, description="ID del producto")],
@@ -69,7 +69,7 @@ def update(
 @router_producto.delete(
     "/{producto_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    dependencies=[Depends(require_role(["admin"]))],
+    dependencies=[Depends(require_role([RolEnum.ADMIN]))],
 )
 def delete(
     producto_id: Annotated[int, Path(ge=1, description="ID del producto")],

@@ -1,8 +1,9 @@
-from sqlmodel import Session, select
+from sqlmodel import Session, select,col
 from sqlalchemy.orm import selectinload
 from app.core.repository import BaseRepository
 from app.producto.model import Producto
 from app.producto_ingrediente.model import ProductoIngrediente
+
 
 
 class ProductoRepository(BaseRepository[Producto]):
@@ -12,15 +13,15 @@ class ProductoRepository(BaseRepository[Producto]):
     def get_all(self) -> list[Producto]:
         stmt = (
             select(Producto)
-            .where(Producto.deleted_at.is_(None))
-            .options(selectinload(Producto.producto_ingredientes))
+            .where(col(Producto.deleted_at).is_(None))
+            .options(selectinload(Producto.producto_ingredientes))  # type: ignore[arg-type]
         )
         return list(self.session.exec(stmt).all())
 
     def get_by_id(self, id: int) -> Producto | None:
         stmt = (
             select(Producto)
-            .where(Producto.id == id)
-            .options(selectinload(Producto.producto_ingredientes))
+            .where(col(Producto.id) == id)
+            .options(selectinload(Producto.producto_ingredientes)) # type: ignore[arg-type]
         )
         return self.session.exec(stmt).first()

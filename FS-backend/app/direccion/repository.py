@@ -1,4 +1,4 @@
-from sqlmodel import Session, select
+from sqlmodel import Session, select,col
 from app.core.repository import BaseRepository
 from app.direccion.model import DireccionEntrega
 
@@ -10,7 +10,7 @@ class DireccionRepository(BaseRepository[DireccionEntrega]):
         return list(self.session.exec(
             select(DireccionEntrega)
             .where(DireccionEntrega.usuario_id == usuario_id)
-            .where(DireccionEntrega.deleted_at.is_(None))
+            .where(col(DireccionEntrega.deleted_at).is_(None))
             .offset(offset).limit(limit)
         ).all())
     
@@ -19,5 +19,5 @@ class DireccionRepository(BaseRepository[DireccionEntrega]):
             select(DireccionEntrega)
             .where(DireccionEntrega.usuario_id == usuario_id)
             .where(DireccionEntrega.es_principal == True)
-            .where(DireccionEntrega.deleted_at.is_(None))
+            .where(col(DireccionEntrega.deleted_at).is_(None))
         ).first()

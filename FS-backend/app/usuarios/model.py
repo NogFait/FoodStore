@@ -1,26 +1,21 @@
+import token
 from typing import List
 from sqlmodel import SQLModel, Field, Relationship
 
-from app.usuario_rol.model import UsuarioRol
+from app.usuarios.enums import RolEnum
 from app.direccion.model import DireccionEntrega
 from app.refresh_token.model import RefreshToken
+from app.core.base_model import BaseEntity
 
-class Usuario(SQLModel, table=True):
-    id:              int | None = Field(default=None, primary_key=True)
+
+class Usuario(BaseEntity, table=True):
     username:        str        = Field(index=True, unique=True)
     full_name:       str
     email:           str        = Field(index=True, unique=True)
     hashed_password: str
     disabled:        bool       = Field(default=False)
-
-    roles: List["Rol"] = Relationship(
-        back_populates="usuarios",
-        link_model=UsuarioRol,
-        sa_relationship_kwargs={
-            "primaryjoin": "Usuario.id == UsuarioRol.usuario_id",
-            "secondaryjoin": "UsuarioRol.rol_codigo == Rol.codigo",
-        },
-    )
+    rol:             RolEnum    = Field(default=RolEnum.CLIENTE, index=True)
+    token_version:    int        = Field(default=0)
 
     direcciones: List["DireccionEntrega"] = Relationship(back_populates="usuario")
 

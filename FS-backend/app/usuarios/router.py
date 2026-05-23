@@ -14,24 +14,28 @@ Regla de imports:
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status, Response
+from fastapi import APIRouter, Depends, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
 
-from app.core.unit_of_work import UnitOfWork, get_uow
+from app.core.config import settings
 from app.core.deps import get_current_active_user, require_role
-from app.usuarios.model import Usuario
-from app.usuarios.schema import UserCreate, UserPublic, Token
+from app.usuarios.unit_of_work import UsuarioUnitOfWork, get_uow
+from app.usuarios.enums import RolEnum
+from app.usuarios.schema import UserCreate, UserPublic, UserRolUpdate
 from app.usuarios.service import UsuarioService
 
-router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
+from app.core.rate_limit import register_limiter, login_limiter 
 
+
+auth = APIRouter(prefix="/api/v1/auth", tags=["auth"])
+admin = APIRouter(prefix="/api/v1", tags=["admin"])
 
 # ─── Registro ─────────────────────────────────────────────────────────────────
 
-@router.post("/register", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
+@auth.post("/register", response_model=UserPublic, status_code=status.HTTP_201_CREATED,dependencies=[Depends(register_limiter)])
 def register(
     user_in: UserCreate,
-    uow: Annotated[UnitOfWork, Depends(get_uow)],
+    uow: Annotated[UsuarioUnitOfWork, Depends(get_uow)],
 ):
     with uow:
         service = UsuarioService(uow)
@@ -40,87 +44,105 @@ def register(
 
 # ─── Login (OAuth2 Password Flow) ────────────────────────────────────────────
 
-@router.post("/token")
+@auth.post("/token", dependencies=[Depends(login_limiter)])
 def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    uow: Annotated[UnitOfWork, Depends(get_uow)],
+    uow: Annotated[UsuarioUnitOfWork, Depends(get_uow)],
     response: Response,
 ):
     with uow:
         service = UsuarioService(uow)
         token = service.authenticate(form_data.username, form_data.password)
-        
-        # Configuramos la cookie HttpOnly
+
         response.set_cookie(
             key="access_token",
             value=token.access_token,
             httponly=True,
-            max_age=1800,  # 30 minutos, o el valor de expires_in
+            max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
             samesite="lax",
-            secure=False,  # En producción con HTTPS debería ser True
+            secure=settings.COOKIE_SECURE,
         )
         return {"mensaje": "Login exitoso. Sesión iniciada."}
 
-@router.post("/logout")
-def logout(response: Response):
-    # Limpiar la cookie HttpOnly al cerrar sesión
+
+@auth.post("/logout")
+def logout(
+    current_user: Annotated[UserPublic, Depends(get_current_active_user)],
+    response: Response,
+    uow: Annotated[UsuarioUnitOfWork, Depends(get_uow)],
+):
+    with uow:
+        service = UsuarioService(uow)
+        service.logout(current_user.id)
     response.delete_cookie(
         key="access_token",
         httponly=True,
         samesite="lax",
-        secure=False,
-    )
+        secure=settings.COOKIE_SECURE,
+        )
     return {"mensaje": "Sesión cerrada exitosamente"}
 
 
 # ─── Rutas protegidas ────────────────────────────────────────────────────────
 
-@router.get("/me", response_model=UserPublic)
+@auth.get("/me", response_model=UserPublic)
 def read_me(
-    current_user: Annotated[Usuario, Depends(get_current_active_user)],
+    current_user: Annotated[UserPublic, Depends(get_current_active_user)],
 ):
     return current_user
 
 
-@router.get("/privado")
+@auth.get("/privado")
 def ruta_privada(
-    current_user: Annotated[Usuario, Depends(get_current_active_user)],
+    current_user: Annotated[UserPublic, Depends(get_current_active_user)],
 ):
     return {
         "mensaje": f"¡Hola, {current_user.full_name}! Accediste a una ruta privada.",
-        "tus_roles": current_user.roles,
+        "tu_rol": current_user.rol.value,
     }
 
 
 # ─── Rutas de administración (RBAC) ──────────────────────────────────────────
 
-@router.get("/admin/usuarios", response_model=list[UserPublic])
+@admin.get("/admin/usuarios", response_model=list[UserPublic])
 def list_users(
-    _admin: Annotated[Usuario, Depends(require_role(["admin"]))],
-    uow: Annotated[UnitOfWork, Depends(get_uow)],
+    _admin: Annotated[UserPublic, Depends(require_role([RolEnum.ADMIN]))],
+    uow: Annotated[UsuarioUnitOfWork, Depends(get_uow)],
 ):
     with uow:
         service = UsuarioService(uow)
         return service.list_all()
 
 
-@router.post("/admin/usuarios/{user_id}/desactivar", response_model=UserPublic)
+@admin.post("/admin/usuarios/{user_id}/desactivar", response_model=UserPublic)
 def deactivate_user(
     user_id: int,
-    _admin: Annotated[Usuario, Depends(require_role(["admin"]))],
-    uow: Annotated[UnitOfWork, Depends(get_uow)],
+    _admin: Annotated[UserPublic, Depends(require_role([RolEnum.ADMIN]))],
+    uow: Annotated[UsuarioUnitOfWork, Depends(get_uow)],
 ):
     with uow:
         service = UsuarioService(uow)
         return service.set_disabled(user_id, disabled=True)
 
 
-@router.post("/admin/usuarios/{user_id}/activar", response_model=UserPublic)
+@admin.post("/admin/usuarios/{user_id}/activar", response_model=UserPublic)
 def activate_user(
     user_id: int,
-    _admin: Annotated[Usuario, Depends(require_role(["admin"]))],
-    uow: Annotated[UnitOfWork, Depends(get_uow)],
+    _admin: Annotated[UserPublic, Depends(require_role([RolEnum.ADMIN]))],
+    uow: Annotated[UsuarioUnitOfWork, Depends(get_uow)],
 ):
     with uow:
         service = UsuarioService(uow)
         return service.set_disabled(user_id, disabled=False)
+
+
+@admin.put("/admin/usuarios/{user_id}/rol", response_model=UserPublic)
+def update_user_rol(
+    user_id: int,
+    payload: UserRolUpdate,
+    _admin: Annotated[UserPublic, Depends(require_role([RolEnum.ADMIN]))],
+    uow: Annotated[UsuarioUnitOfWork, Depends(get_uow)],
+):
+    with uow:
+        service = UsuarioService(uow)
+        return service.set_rol(user_id, payload.rol)

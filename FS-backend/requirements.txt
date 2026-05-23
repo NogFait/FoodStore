@@ -7,3 +7,4 @@ pydantic-settings
 uvicorn[standard]
 psycopg2-binary
 python-dotenv
+fastapi-throttle
