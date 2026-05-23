@@ -22,10 +22,15 @@ export async function login(data: usuariosLogin): Promise<AuthResponse> {
 export async function register(data: usuariosRegister): Promise<usuarioPublico> {
   return api.post<usuarioPublico>("/api/v1/auth/register", data).then((r) => r.data);
 }
-
+// validar que el usuario realmente tenga id y roles asi funcona la validacion del protectedRoute
 export async function getCurrentUser(): Promise<usuarioPublico | null> {
   try {
-    return await api.get<usuarioPublico>("/api/v1/auth/me").then((r) => r.data);
+    const res = await api.get<usuarioPublico>("/api/v1/auth/me");
+    const data = res.data;
+    if (!data || typeof data !== "object" || !data.id || !Array.isArray(data.roles)) {
+      return null;
+    }
+    return data;
   } catch {
     return null;
   }

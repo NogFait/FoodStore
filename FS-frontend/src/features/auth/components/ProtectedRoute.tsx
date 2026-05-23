@@ -12,8 +12,8 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
       </div>
     );
   }
-
-  if (!user) {
+// validamos que el usuario primero exista o tenga id o rol. si no tiene, pal lobby, o login XD
+  if ( !user || !user.id || !Array.isArray(user.roles) ) {
     return <Navigate to="/login" replace />;
   }
 
@@ -31,7 +31,7 @@ export function PublicRoute({ children }: { children: ReactNode }) {
     );
   }
 
-  if (user) {
+  if (user && user.id && Array.isArray(user.roles)) {
     return <Navigate to="/categorias" replace />;
   }
 

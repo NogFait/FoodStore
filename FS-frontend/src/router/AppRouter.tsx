@@ -9,11 +9,29 @@ import DireccionesPage from "../features/direcciones/pages/DireccionesPage";
 import Login from "../features/auth/pages/Login";
 import Register from "../features/auth/pages/Register";
 import { ProtectedRoute, PublicRoute } from "../features/auth/components/ProtectedRoute";
+import { useAuth } from "../features/auth/hooks/useAuth";
+
+
+//fx para que verifique si hay usuario logueado, si no encuentra pal login, si encuentra al panel del admin
+function RootRedirect() {
+  const { user, isLoading } = useAuth();
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent" />
+      </div>
+    );
+  }
+  if (user && user.id && Array.isArray(user.roles)) {
+    return <Navigate to="/categorias" replace />;
+  }
+  return <Navigate to="/login" replace />;
+}
 
 const AppRouter = () => {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/categorias" replace />} />
+      <Route path="/" element={<RootRedirect />} />
       <Route
         path="/productos"
         element={
