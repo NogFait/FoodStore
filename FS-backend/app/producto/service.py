@@ -6,17 +6,15 @@ from app.producto.model import Producto
 from app.producto.schema import ProductoCreate, ProductoUpdate, ProductoResponse
 from app.producto.unit_of_work import ProductoUnitOfWork
 from app.categoria.model import Categoria
-from app.ingrediente.model import Ingrediente
 from app.producto_ingrediente.model import ProductoIngrediente
-from datetime import datetime
-
+from app.core.datetime_utils import utcnow
 
 class ProductoService:
     def __init__(self, session: Session) -> None:
         self._session = session
 
     def _get_or_404(self, uow: ProductoUnitOfWork, producto_id: int) -> Producto:
-        producto = uow.productos.get_by_id(producto_id)
+        producto = uow.productos.get_by_id_ingredientes(producto_id)
         if not producto:
             raise HTTPException(status_code=404, detail="Producto no encontrado")
         return producto
@@ -76,7 +74,7 @@ class ProductoService:
                     )
                     uow.session.add(pi)
 
-            return ProductoResponse.model_validate(producto)
+            return Producto.model_validate(producto)
 
     def get_by_id(self, producto_id: int) -> Producto:
         with ProductoUnitOfWork(self._session) as uow:
@@ -84,7 +82,7 @@ class ProductoService:
 
     def list(self, skip: int = 0, limit: int = 20, disponible: Optional[bool] = None) -> list[Producto]:
         with ProductoUnitOfWork(self._session) as uow:
-            productos = uow.productos.get_all()
+            productos = uow.productos.get_all_ingredientes()
 
             if disponible is not None:
                 productos = [p for p in productos if p.disponible == disponible]
@@ -120,7 +118,7 @@ class ProductoService:
             elif producto.stock_cantidad > 0:
                 producto.disponible = True
 
-            producto.updated_at = datetime.now()
+            producto.updated_at = utcnow()
 
             uow.productos.add(producto)
             return producto

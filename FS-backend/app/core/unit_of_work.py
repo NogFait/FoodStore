@@ -9,6 +9,7 @@ from app.core.database import get_session
 class UnitOfWork:
     def __init__(self, session: Session) -> None:
         self._session = session
+        self.session = session    # ← guardás como _session (PRIVADO)
 
     def __enter__(self) -> Self:
         return self

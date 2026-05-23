@@ -5,12 +5,11 @@ from app.producto.model import Producto
 from app.producto_ingrediente.model import ProductoIngrediente
 
 
-
 class ProductoRepository(BaseRepository[Producto]):
     def __init__(self, session: Session) -> None:
         super().__init__(session, Producto)
 
-    def get_all(self) -> list[Producto]:
+    def get_all_ingredientes(self) -> list[Producto]:
         stmt = (
             select(Producto)
             .where(col(Producto.deleted_at).is_(None))
@@ -18,7 +17,7 @@ class ProductoRepository(BaseRepository[Producto]):
         )
         return list(self.session.exec(stmt).all())
 
-    def get_by_id(self, id: int) -> Producto | None:
+    def get_by_id_ingredientes(self, id: int) -> Producto | None:
         stmt = (
             select(Producto)
             .where(col(Producto.id) == id)
