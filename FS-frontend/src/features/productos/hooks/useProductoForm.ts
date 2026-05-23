@@ -66,7 +66,7 @@ export function useProductoForm(
         form.setFieldValue("ingredientes", []);
       }
     }
-  }, [producto, isOpen]);
+  }, [producto, isOpen,form]);
 
   const toggleIngrediente = (ingId: number) => {
     const current = form.getFieldValue("ingredientes");

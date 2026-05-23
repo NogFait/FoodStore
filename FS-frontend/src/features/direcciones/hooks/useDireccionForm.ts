@@ -55,7 +55,7 @@ export function useDireccionForm(
       form.setFieldValue("longitud", undefined);
       form.setFieldValue("es_principal", false);
     }
-  }, [direccion]);
+  }, [direccion,form]);
 
   return {
     form,

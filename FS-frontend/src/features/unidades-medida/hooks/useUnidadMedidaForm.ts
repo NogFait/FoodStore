@@ -31,7 +31,7 @@ export function useUnidadMedidaForm(
       form.setFieldValue("simbolo", "");
       form.setFieldValue("tipo", "");
     }
-  }, [unidad]);
+  }, [unidad,form]);
 
   return {
     form,

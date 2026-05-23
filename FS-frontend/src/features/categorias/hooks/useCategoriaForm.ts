@@ -58,7 +58,7 @@ export function useCategoriaForm(
       form.setFieldValue("imagen_url", "");
       form.setFieldValue("parent_id", undefined);
     }
-  }, [categoria]);
+  }, [categoria,form]);
 
   const parentOptions = useMemo(
     () => buildParentTree(categorias, categoria ? categoria.id : undefined),
