@@ -27,7 +27,7 @@ export async function getCurrentUser(): Promise<usuarioPublico | null> {
   try {
     const res = await api.get<usuarioPublico>("/api/v1/auth/me");
     const data = res.data;
-    if (!data || typeof data !== "object" || !data.id || !Array.isArray(data.roles)) {
+    if (!data || typeof data !== "object" || !data.id || !data.role) {
       return null;
     }
     return data;

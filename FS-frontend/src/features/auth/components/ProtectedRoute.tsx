@@ -1,39 +1,26 @@
 import { Navigate } from "react-router-dom";
-import type { ReactNode } from "react";
 import { useAuth } from "../hooks/useAuth";
+import {Outlet} from "react-router-dom";
+import { Spinner } from "../../../components/ui/Spinner";
 
-export function ProtectedRoute({ children }: { children: ReactNode }) {
+export function ProtectedRoute() {
   const { user, isLoading } = useAuth();
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent" />
-      </div>
-    );
-  }
+  if (isLoading) return <Spinner />;
 // validamos que el usuario primero exista o tenga id o rol. si no tiene, pal lobby, o login XD
-  if ( !user || !user.id || !Array.isArray(user.roles) ) {
-    return <Navigate to="/login" replace />;
-  }
+  if ( !user || !user.id || !user.role ) return <Navigate to="/login" replace />;
 
-  return <>{children}</>;
+  return <Outlet />;
 }
 
-export function PublicRoute({ children }: { children: ReactNode }) {
+export function PublicRoute() {
   const { user, isLoading } = useAuth();
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent" />
-      </div>
-    );
-  }
+  if (isLoading) return <Spinner />;
 
-  if (user && user.id && Array.isArray(user.roles)) {
+  if (user && user.id && user.role) {
     return <Navigate to="/categorias" replace />;
   }
 
-  return <>{children}</>;
+  return <Outlet />;
 }

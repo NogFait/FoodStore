@@ -16,7 +16,7 @@ export interface usuarioPublico {
     username: string;
     full_name: string;
     email: string;
-    roles: string[];
+    role: string;
     disabled: boolean;
 }
 

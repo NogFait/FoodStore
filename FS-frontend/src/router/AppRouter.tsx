@@ -5,7 +5,6 @@ import CategoriasPage from "../features/categorias/pages/CategoriasPage";
 import IngredientesPage from "../features/ingredientes/pages/IngredientesPage";
 import UnidadesMedidaPage from "../features/unidades-medida/pages/UnidadesMedidaPage";
 import PedidosPage from "../features/pedidos/pages/PedidosPage";
-import DireccionesPage from "../features/direcciones/pages/DireccionesPage";
 import Login from "../features/auth/pages/Login";
 import Register from "../features/auth/pages/Register";
 import { ProtectedRoute, PublicRoute } from "../features/auth/components/ProtectedRoute";
@@ -22,7 +21,7 @@ function RootRedirect() {
       </div>
     );
   }
-  if (user && user.id && Array.isArray(user.roles)) {
+  if (user && user.id && user.role) {
     return <Navigate to="/categorias" replace />;
   }
   return <Navigate to="/login" replace />;
@@ -32,72 +31,21 @@ const AppRouter = () => {
   return (
     <Routes>
       <Route path="/" element={<RootRedirect />} />
-      <Route
-        path="/productos"
-        element={
-          <ProtectedRoute>
-            <ProductosPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/categorias"
-        element={
-          <ProtectedRoute>
-            <CategoriasPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/ingredientes"
-        element={
-          <ProtectedRoute>
-            <IngredientesPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/unidades-medida"
-        element={
-          <ProtectedRoute>
-            <UnidadesMedidaPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/direcciones"
-        element={
-          <ProtectedRoute>
-            <DireccionesPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/pedidos"
-        element={
-          <ProtectedRoute>
-            <PedidosPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/login"
-        element={
-          <PublicRoute>
-            <Login />
-          </PublicRoute>
-        }
-      />
-      <Route
-        path="/register"
-        element={
-          <PublicRoute>
-            <Register />
-          </PublicRoute>
-        }
-      />
+
+      <Route element={<ProtectedRoute />}>
+        <Route path="/productos" element={<ProductosPage />} />
+        <Route path="/categorias" element={<CategoriasPage />} />
+        <Route path="/ingredientes" element={<IngredientesPage />} />
+        <Route path="/unidades-medida" element={<UnidadesMedidaPage />} />
+        <Route path="/pedidos" element={<PedidosPage />} />
+      </Route>
+
+      <Route element={<PublicRoute />}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+      </Route>
     </Routes>
   );
-};
+}
 
 export default AppRouter;
