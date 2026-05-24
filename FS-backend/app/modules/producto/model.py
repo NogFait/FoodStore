@@ -33,7 +33,7 @@ class Producto(BaseEntity, table=True):
 
 
     @property
-    def categorias_ids(self) -> List[int]:
+    def categorias_ids(self) -> list[int]:
         return [cat.id for cat in self.categorias] if self.categorias else []
 
     @property

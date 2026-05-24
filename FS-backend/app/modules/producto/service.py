@@ -1,6 +1,6 @@
 from typing import Optional
 from fastapi import HTTPException
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from app.modules.producto.model import Producto
 from app.modules.producto.schema import ProductoCreate, ProductoUpdate, ProductoResponse
@@ -55,7 +55,7 @@ class ProductoService:
             if hasattr(data, "categorias_ids") and data.categorias_ids:
                 categorias = list(
                     uow.session.exec(
-                        select(Categoria).where(Categoria.id.in_(data.categorias_ids))
+                        select(Categoria).where(col(Categoria.id).in_(data.categorias_ids))
                     ).all()
                 )
                 producto.categorias = categorias
@@ -93,22 +93,22 @@ class ProductoService:
         with ProductoUnitOfWork(self._session) as uow:
             producto = self._get_or_404(uow, producto_id)
 
-            update_data = data.model_dump(exclude_unset=True)
+            update_data = data.model_dump(
+                exclude_unset=True,
+                exclude={"categorias_ids", "ingredientes"},
+                )
 
-            if "categorias_ids" in update_data:
-                categorias_ids = update_data.pop("categorias_ids")
-                if categorias_ids is not None:
+            if "categorias_ids" in data.model_fields_set and data.categorias_ids is not None:
+                if "categorias_ids" is not None:
                     categorias = list(
                         uow.session.exec(
-                            select(Categoria).where(Categoria.id.in_(categorias_ids))
+                            select(Categoria).where(col(Categoria.id).in_(data.categorias_ids))
                         ).all()
                     )
                     producto.categorias = categorias
 
-            if "ingredientes" in update_data:
-                ingredientes_data = update_data.pop("ingredientes")
-                if ingredientes_data is not None:
-                    self._sync_ingredientes(uow, producto, ingredientes_data)
+            if "ingredientes_ids" in data.model_fields_set and data.ingredientes is not None:
+                self._sync_ingredientes(uow, producto, data.ingredientes)
 
             for field, value in update_data.items():
                 setattr(producto, field, value)
