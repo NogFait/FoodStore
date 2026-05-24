@@ -8,15 +8,15 @@ from app.core.database import engine
 from app.core.seed import seed_admin_user
 
 # Registrar modelos sin router propio en SQLModel.metadata antes de create_all
-from app.refresh_token import model as _refresh_token_model  # noqa: F401
+from app.modules.refresh_token import model as _refresh_token_model  # noqa: F401
 
 # Routers de dominio
-from app.categoria.router import router_categoria
-from app.producto.router import router_producto
-from app.ingrediente.router import router_ingrediente
-from app.usuarios.router import auth as router_auth, admin as router_admin
-from app.direccion.router import router_direccion
-from app.unidad_medida.router import router_unidad_medida
+from app.modules.categoria.router import router_categoria
+from app.modules.producto.router import router_producto
+from app.modules.ingrediente.router import router_ingrediente
+from app.modules.usuarios.router import auth as router_auth, admin as router_admin
+from app.modules.direccion.router import router_direccion
+from app.modules.unidad_medida.router import router_unidad_medida
 
 
 # ─── Ciclo de vida ────────────────────────────────────────────────────────────

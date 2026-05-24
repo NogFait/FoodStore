@@ -4,9 +4,9 @@ from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 
 from app.core.security import decode_access_token
-from app.usuarios.unit_of_work import UsuarioUnitOfWork, get_uow
-from app.usuarios.enums import RolEnum
-from app.usuarios.schema import UserPublic
+from app.modules.usuarios.unit_of_work import UsuarioUnitOfWork, get_uow
+from app.modules.usuarios.enums import RolEnum
+from app.modules.usuarios.schema import UserPublic
 
 
 class OAuth2PasswordBearerWithCookie(OAuth2PasswordBearer):

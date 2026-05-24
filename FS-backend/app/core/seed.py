@@ -8,9 +8,9 @@ Si el admin ya existe → no hace nada. Si no existe → lo crea.
 from sqlmodel import Session
 from app.core.config import settings
 from app.core.security import hash_password
-from app.usuarios.enums import RolEnum
-from app.usuarios.model import Usuario
-from app.usuarios.unit_of_work import UsuarioUnitOfWork
+from app.modules.usuarios.enums import RolEnum
+from app.modules.usuarios.model import Usuario
+from app.modules.usuarios.unit_of_work import UsuarioUnitOfWork
 
 
 def seed_admin_user(session: Session) -> None:
