@@ -5,7 +5,7 @@ export interface usuariosRegister {
     password:  string
     
 }
-
+export type Role = "ADMIN" | "CLIENTE" | "COCINA";
 export interface usuariosLogin {
     email: string
     password: string
@@ -16,10 +16,18 @@ export interface usuarioPublico {
     username: string;
     full_name: string;
     email: string;
-    role: string;
+    role: Role;
     disabled: boolean;
 }
 
 export interface AuthResponse {
     mensaje: string;
 }
+
+export type AuthContextType = {
+  user: usuarioPublico | null;
+  isLoading: boolean;
+  login: (data: usuariosLogin) => Promise<void>;
+  register: (data: usuariosRegister) => Promise<void>;
+  logout: () => Promise<void>;
+};

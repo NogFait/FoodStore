@@ -8,3 +8,8 @@ export function useAuth() {
   }
   return context;
 }
+
+export function useIsAuthenticated() {
+  const { user, isLoading } = useAuth();
+  return { isAuthenticated: !!user, isLoading };
+}

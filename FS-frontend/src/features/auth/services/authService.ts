@@ -1,5 +1,5 @@
 import api, { API_BASE } from "../../../api/api";
-import type { usuarioPublico, usuariosLogin, usuariosRegister, AuthResponse } from "../types";
+import type { usuarioPublico, usuariosLogin, usuariosRegister, AuthResponse,Role } from "../types";
 
 export async function login(data: usuariosLogin): Promise<AuthResponse> {
   const formData = new URLSearchParams();
@@ -23,14 +23,26 @@ export async function register(data: usuariosRegister): Promise<usuarioPublico> 
   return api.post<usuarioPublico>("/api/v1/auth/register", data).then((r) => r.data);
 }
 // validar que el usuario realmente tenga id y roles asi funcona la validacion del protectedRoute
+
+function isValidUser(user: unknown): user is usuarioPublico {
+  if (!user || typeof user !== "object") return false;
+  const u = user as Record<string, unknown>;
+  return (
+    typeof u.id === "number" &&
+    typeof u.username === "string" &&
+    typeof u.full_name === "string" &&
+    typeof u.email === "string" &&
+    typeof u.role === "string" &&
+    ["ADMIN", "CLIENTE", "COCINA"].includes(u.role as Role) &&
+    typeof u.disabled === "boolean" && u.disabled === false
+  )
+}
+
 export async function getCurrentUser(): Promise<usuarioPublico | null> {
   try {
     const res = await api.get<usuarioPublico>("/api/v1/auth/me");
-    const data = res.data;
-    if (!data || typeof data !== "object" || !data.id || !data.role) {
-      return null;
-    }
-    return data;
+    if (!isValidUser(res.data)) return null;
+    return res.data;
   } catch {
     return null;
   }
