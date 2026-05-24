@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     # ─── Base de datos (PostgreSQL — patrón u_05_v2) ──────────────────────────
     postgres_user:     str = "postgres"
     postgres_password: str = "password"
-    postgres_db:       str = "seguridad_jwt_db"
+    postgres_db:       str = "foodstore"
     postgres_host:     str = "localhost"
     postgres_port:     int = 5432
 

@@ -1,8 +1,10 @@
-from typing import Optional
-from datetime import datetime
-from sqlmodel import SQLModel, Field, Relationship
+from typing import Optional, TYPE_CHECKING
+from sqlmodel import  Field, Relationship
 from app.core.base_model import BaseEntity
-from app.usuarios.model import Usuario
+
+if TYPE_CHECKING:
+    from app.usuarios.model import Usuario
+
 
 class DireccionEntrega(BaseEntity, table=True):
 

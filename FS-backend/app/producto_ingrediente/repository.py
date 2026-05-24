@@ -1,9 +1,9 @@
 from sqlmodel import Session, select
-from app.core.repository import BaseRepository
+from app.core.repository_intermedias import BaseRepositoryIntermedias
 from app.producto_ingrediente.model import ProductoIngrediente
 
 
-class ProductoIngredienteRepository(BaseRepository[ProductoIngrediente]):
+class ProductoIngredienteRepository(BaseRepositoryIntermedias[ProductoIngrediente]):
     def __init__(self, session: Session) -> None:
         super().__init__(session, ProductoIngrediente)
 

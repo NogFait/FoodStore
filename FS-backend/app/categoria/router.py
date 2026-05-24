@@ -6,15 +6,16 @@ from ..core.database import get_session
 from ..core.deps import get_current_active_user, require_role
 from .schema import CategoriaCreate, CategoriaResponse, CategoriaUpdate
 from .service import create_categoria, delete_categoria, list_categorias, update_categoria, get_categoria_by_id
+from app.usuarios.enums import RolEnum
 
-router_categoria = APIRouter(prefix="/categorias", tags=["categorias"])
+router_categoria = APIRouter(prefix="/api/v1/categorias", tags=["categorias"])
 
 
 @router_categoria.post(
     "/",
     response_model=CategoriaResponse,
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(require_role(["admin"]))],
+    dependencies=[Depends(require_role([RolEnum.ADMIN]))],
 )
 def create(categoria: CategoriaCreate, session: Session = Depends(get_session)):
     return create_categoria(session, categoria)
@@ -51,7 +52,7 @@ def get_by_id(
 @router_categoria.patch(
     "/{categoria_id}",
     response_model=CategoriaResponse,
-    dependencies=[Depends(require_role(["admin"]))],
+    dependencies=[Depends(require_role([RolEnum.ADMIN]))],
 )
 def update(
     categoria_id: Annotated[int, Path(ge=1, description="ID de la categoría")],

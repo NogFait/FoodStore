@@ -1,14 +1,18 @@
-import token
-from typing import List
-from sqlmodel import SQLModel, Field, Relationship
+from typing import TYPE_CHECKING,List
+from sqlmodel import Field, Relationship
+
 
 from app.usuarios.enums import RolEnum
-from app.direccion.model import DireccionEntrega
-from app.refresh_token.model import RefreshToken
+
 from app.core.base_model import BaseEntity
 
+if TYPE_CHECKING:
+    from app.direccion.model import DireccionEntrega
+    from app.refresh_token.model import RefreshToken
 
 class Usuario(BaseEntity, table=True):
+    __tablename__ = "usuario" # type: ignore[assignment]
+
     username:        str        = Field(index=True, unique=True)
     full_name:       str
     email:           str        = Field(index=True, unique=True)

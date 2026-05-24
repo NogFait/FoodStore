@@ -6,7 +6,7 @@ from app.core.database import get_session
 from app.unidad_medida.schema import UnidadMedidaCreate, UnidadMedidaResponse, UnidadMedidaUpdate
 from app.unidad_medida.service import create_unidad, list_unidades, get_unidad, update_unidad, delete_unidad
 
-router_unidad_medida = APIRouter(prefix="/unidades-medida", tags=["unidades-medida"])
+router_unidad_medida = APIRouter(prefix="/api/v1/unidades-medida", tags=["unidades-medida"])
 
 
 @router_unidad_medida.get("/", response_model=list[UnidadMedidaResponse])

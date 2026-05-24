@@ -8,7 +8,7 @@ from ..core.deps import get_current_active_user, require_role
 from .schema import ProductoCreate, ProductoResponse, ProductoUpdate
 from .service import create_producto, delete_producto, list_productos, update_producto, get_producto_by_id
 
-router_producto = APIRouter(prefix="/productos",tags=["productos"])
+router_producto = APIRouter(prefix="/api/v1/productos",tags=["productos"])
 
 
 @router_producto.post(

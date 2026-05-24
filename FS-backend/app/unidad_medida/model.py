@@ -1,9 +1,13 @@
-from typing import List
+from typing import List, TYPE_CHECKING
 from datetime import datetime
 from sqlmodel import  Field, Relationship
 from app.core.base_model import BaseEntity
-from app.producto.model import Producto
+
+if TYPE_CHECKING:
+    from app.producto.model import Producto
+
 class UnidadMedida(BaseEntity, table=True):
+    __tablename__ = "unidad_medida" # type: ignore[assignment]
 
     nombre: str = Field(max_length=50)
     simbolo: str = Field(max_length=10)

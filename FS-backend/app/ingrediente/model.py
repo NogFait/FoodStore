@@ -1,8 +1,11 @@
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 from sqlmodel import SQLModel,Field, Relationship
 from datetime import datetime
-from ..producto_ingrediente.model import ProductoIngrediente
 from app.core.base_model import BaseEntity
+
+
+if TYPE_CHECKING:
+    from app.producto_ingrediente.model import ProductoIngrediente
 
 class Ingrediente(BaseEntity, table=True):
 

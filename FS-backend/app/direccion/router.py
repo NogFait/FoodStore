@@ -8,7 +8,7 @@ from app.direccion.schema import DireccionCreate, DireccionResponse, DireccionUp
 from app.direccion.service import create_direccion, list_direcciones, get_direccion, update_direccion, delete_direccion
 
 
-router_direccion = APIRouter(prefix="/direcciones", tags=["direcciones"])
+router_direccion = APIRouter(prefix="/api/v1/direcciones", tags=["direcciones"])
 
 
 @router_direccion.get("/", response_model=list[DireccionResponse])

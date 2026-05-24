@@ -7,11 +7,14 @@ from sqlmodel import SQLModel, Session
 from app.core.database import engine
 from app.core.seed import seed_admin_user
 
+# Registrar modelos sin router propio en SQLModel.metadata antes de create_all
+from app.refresh_token import model as _refresh_token_model  # noqa: F401
+
 # Routers de dominio
 from app.categoria.router import router_categoria
 from app.producto.router import router_producto
 from app.ingrediente.router import router_ingrediente
-from app.usuarios.router import router as router_usuarios
+from app.usuarios.router import auth as router_auth, admin as router_admin
 from app.direccion.router import router_direccion
 from app.unidad_medida.router import router_unidad_medida
 
@@ -44,6 +47,7 @@ app.add_middleware(
 app.include_router(router_categoria)
 app.include_router(router_producto)
 app.include_router(router_ingrediente)
-app.include_router(router_usuarios)
+app.include_router(router_auth)
+app.include_router(router_admin)
 app.include_router(router_direccion)
 app.include_router(router_unidad_medida)

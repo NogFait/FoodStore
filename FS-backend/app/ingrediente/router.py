@@ -14,7 +14,7 @@ from .service import (
     get_ingrediente_by_id,
 )
 
-router_ingrediente = APIRouter(prefix="/ingredientes", tags=["ingredientes"])
+router_ingrediente = APIRouter(prefix="/api/v1/ingredientes", tags=["ingredientes"])
 
 
 @router_ingrediente.post(

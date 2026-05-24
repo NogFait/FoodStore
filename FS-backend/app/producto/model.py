@@ -1,13 +1,14 @@
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 from sqlmodel import Field, Relationship
 
-from app.categoria.model import Categoria
-from app.ingrediente.model import Ingrediente
-from app.unidad_medida.model import UnidadMedida
 from ..producto_categoria.model import ProductoCategoria
-from ..producto_ingrediente.model import ProductoIngrediente
 from app.core.base_model import BaseEntity
 from datetime import datetime
+
+if TYPE_CHECKING:
+    from app.categoria.model import Categoria
+    from app.unidad_medida.model import UnidadMedida
+    from app.producto_ingrediente.model import ProductoIngrediente
 
 class Producto(BaseEntity, table=True):
 

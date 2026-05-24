@@ -46,3 +46,4 @@ __pycache__/
 *.svg
 
 .atl/
+docker-compose.yml
