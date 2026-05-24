@@ -68,7 +68,7 @@ def update(
 @router_categoria.delete(
     "/{categoria_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    dependencies=[Depends(require_role(["admin"]))],
+    dependencies=[Depends(require_role([RolEnum.ADMIN]))],
 )
 def delete(
     categoria_id: Annotated[int, Path(ge=1, description="ID de la categoría")],
