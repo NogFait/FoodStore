@@ -22,11 +22,11 @@ class Pedido(BaseEntity, table=True):
     direccion_id: Optional[int] = Field(default=None, foreign_key="direccion_entrega.id", index=True)
     estado_pedido_codigo: str = Field(foreign_key="estado_pedido.codigo", index=True)
     forma_pago_id: int = Field(foreign_key="forma_pago.id", index=True)
-    modalidad_entrega: ModalidadEntrega = Field(default=ModalidadEntrega.DELIVERY, index=True)
+    modalidad_entrega: ModalidadEntrega = Field(index=True)
     subtotal: Decimal = Field(max_digits=10, decimal_places=2)
     total: Decimal = Field(max_digits=10, decimal_places=2)
     costo_envio: Decimal = Field(max_digits=10, decimal_places=2)
-    notas : Optional[str] = None
+    notas : Optional[str] = Field(default=None, max_length=500)
 
     forma_pago_snap: Optional[str] = None
     direccion_snap: Optional[str] = None

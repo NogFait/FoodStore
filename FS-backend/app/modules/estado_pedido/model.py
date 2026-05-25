@@ -12,7 +12,7 @@ class EstadoPedido(SQLModel, table=True):
 
     codigo: str = Field(max_length=20, unique=True, primary_key=True)
     nombre: str = Field(max_length=50, unique=True)
-    orden: int = Field(default=0,unique=True)
+    orden: int = Field(unique=True)
     descripcion: str = Field(max_length=255, nullable=True)
     es_terminal: bool = Field(default=False)
     permite_cancelar: bool = Field(default=False)
