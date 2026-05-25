@@ -1,9 +1,11 @@
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, List
 from sqlmodel import  Field, Relationship
 from app.core.base_model import BaseEntity
 
+
 if TYPE_CHECKING:
     from app.modules.usuarios.model import Usuario
+    from app.modules.pedido.model import Pedido
 
 
 class DireccionEntrega(BaseEntity, table=True):
@@ -20,3 +22,5 @@ class DireccionEntrega(BaseEntity, table=True):
     es_principal: bool = False
 
     usuario: "Usuario" = Relationship(back_populates="direcciones")
+
+    pedidos: List["Pedido"] = Relationship(back_populates="direccion")
