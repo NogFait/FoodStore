@@ -3,18 +3,18 @@ from sqlmodel import Field, Relationship
 
 from ..producto_categoria.model import ProductoCategoria
 from app.core.base_model import BaseEntity
-from datetime import datetime
-
+from decimal import Decimal
 if TYPE_CHECKING:
     from app.modules.categoria.model import Categoria
     from app.modules.unidad_medida.model import UnidadMedida
     from app.modules.producto_ingrediente.model import ProductoIngrediente
+    from app.modules.detalle_pedido.model import DetallePedido
 
 class Producto(BaseEntity, table=True):
 
     nombre: str
     descripcion: str
-    precio_base: float = Field(ge=0)
+    precio_base: Decimal = Field(max_digits=10, decimal_places=2, ge=0)
     imagenes_url: Optional[str] = None
     stock_cantidad: int = Field(default=0, ge=0)
     disponible: bool = True
@@ -30,6 +30,8 @@ class Producto(BaseEntity, table=True):
     )
 
     unidad_venta: Optional["UnidadMedida"] = Relationship(back_populates="productos")
+
+    detalles : List["DetallePedido"] = Relationship(back_populates="producto")
 
 
     @property

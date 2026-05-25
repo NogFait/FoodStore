@@ -9,6 +9,7 @@ from app.core.base_model import BaseEntity
 if TYPE_CHECKING:
     from app.modules.direccion.model import DireccionEntrega
     from app.modules.refresh_token.model import RefreshToken
+    from app.modules.historial_pedido.model import HistorialEstadoPedido
 
 
 class Usuario(BaseEntity, table=True):
@@ -25,3 +26,5 @@ class Usuario(BaseEntity, table=True):
     direcciones: List["DireccionEntrega"] = Relationship(back_populates="usuario")
 
     refresh_tokens: List["RefreshToken"] = Relationship(back_populates="usuario")
+
+    historiales_estado_pedido: List["HistorialEstadoPedido"] = Relationship(back_populates="usuario")

@@ -5,9 +5,12 @@ Idempotencia = correr la función N veces produce el mismo resultado que correrl
 Si el admin ya existe → no hace nada. Si no existe → lo crea.
 """
 
-from sqlmodel import Session
+from sqlmodel import Session, select
+
 from app.core.config import settings
 from app.core.security import hash_password
+from app.modules.estado_pedido.model import EstadoPedido
+from app.modules.forma_pago.model import FormaPago
 from app.modules.usuarios.enums import RolEnum
 from app.modules.usuarios.model import Usuario
 from app.modules.usuarios.unit_of_work import UsuarioUnitOfWork
@@ -29,3 +32,111 @@ def seed_admin_user(session: Session) -> None:
             disabled=False,
         )
         uow.usuarios.add(admin)
+
+
+# Catálogo de estados del flujo de pedidos.
+# Reglas: debe existir uno con orden=1 (entrada) y uno con codigo="CANCELADO".
+ESTADOS_PEDIDO_SEED: list[dict] = [
+    {
+        "codigo": "PENDIENTE",
+        "nombre": "Pendiente",
+        "orden": 1,
+        "descripcion": "Pedido recibido, esperando confirmación",
+        "es_terminal": False,
+        "permite_cancelar": True,
+    },
+    {
+        "codigo": "CONFIRMADO",
+        "nombre": "Confirmado",
+        "orden": 2,
+        "descripcion": "Pedido confirmado por la cocina",
+        "es_terminal": False,
+        "permite_cancelar": True,
+    },
+    {
+        "codigo": "EN_PREPARACION",
+        "nombre": "En preparación",
+        "orden": 3,
+        "descripcion": "Cocina trabajando en el pedido",
+        "es_terminal": False,
+        "permite_cancelar": False,
+    },
+    {
+        "codigo": "LISTO_PARA_RETIRAR",
+        "nombre": "Listo para retirar",
+        "orden": 4,
+        "descripcion": "El pedido está listo, esperando que el cliente lo retire",
+        "es_terminal": False,
+        "permite_cancelar": False,
+    },
+    {
+        "codigo": "ENVIADO",
+        "nombre": "Enviado",
+        "orden": 5,
+        "descripcion": "Pedido despachado al cliente",
+        "es_terminal": False,
+        "permite_cancelar": False,
+    },
+    {
+        "codigo": "ENTREGADO",
+        "nombre": "Entregado",
+        "orden": 6,
+        "descripcion": "Pedido entregado al cliente",
+        "es_terminal": True,
+        "permite_cancelar": False,
+    },
+    {
+        "codigo": "CANCELADO",
+        "nombre": "Cancelado",
+        "orden": 99,
+        "descripcion": "Pedido cancelado",
+        "es_terminal": True,
+        "permite_cancelar": False,
+    },
+]
+
+
+def seed_estados_pedido(session: Session) -> None:
+    """Crea los estados de pedido que falten. Idempotente: matchea por código."""
+    existentes_codigos = {
+        e.codigo for e in session.exec(select(EstadoPedido)).all()
+    }
+
+    nuevos = [
+        EstadoPedido(**data)
+        for data in ESTADOS_PEDIDO_SEED
+        if data["codigo"] not in existentes_codigos
+    ]
+    if not nuevos:
+        return
+
+    for estado in nuevos:
+        session.add(estado)
+    session.commit()
+
+
+# Formas de pago habilitadas por defecto.
+FORMAS_PAGO_SEED: list[dict] = [
+    {"codigo": "EFECTIVO", "descripcion": "Efectivo", "habilitado": True},
+    {"codigo": "TRANSFERENCIA", "descripcion": "Transferencia bancaria", "habilitado": True},
+    {"codigo": "MERCADOPAGO", "descripcion": "MercadoPago", "habilitado": True},
+]
+
+
+def seed_formas_pago(session: Session) -> None:
+    """Crea las formas de pago que falten. Idempotente: matchea por código."""
+    existentes_codigos = {
+        f.codigo for f in session.exec(select(FormaPago)).all()
+    }
+
+    nuevas = [
+        FormaPago(**data)
+        for data in FORMAS_PAGO_SEED
+        if data["codigo"] not in existentes_codigos
+    ]
+    if not nuevas:
+        return
+
+    for forma in nuevas:
+        session.add(forma)
+    session.commit()

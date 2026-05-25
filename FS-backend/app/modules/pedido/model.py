@@ -1,6 +1,16 @@
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 from sqlmodel import  Field, Relationship
 from app.core.base_model import BaseEntity
+from app.modules.pedido.enums import ModalidadEntrega
+from decimal import Decimal
+
+if TYPE_CHECKING:
+    from app.modules.usuarios.model import Usuario
+    from app.modules.direccion.model import DireccionEntrega
+    from app.modules.estado_pedido.model import EstadoPedido
+    from app.modules.historial_pedido.model import HistorialEstadoPedido
+    from app.modules.detalle_pedido.model import DetallePedido
+    from app.modules.forma_pago.model import FormaPago
 
 
 
@@ -9,11 +19,29 @@ from app.core.base_model import BaseEntity
 class Pedido(BaseEntity, table=True):
 
     usuario_id: int = Field(foreign_key="usuario.id", index=True)
-    direccion_id: int = Field(foreign_key="direccionentrega.id", index=True)
-    total: float
-    estado: str = Field(max_length=20)
+    direccion_id: Optional[int] = Field(default=None, foreign_key="direccion_entrega.id", index=True)
+    estado_pedido_codigo: str = Field(foreign_key="estado_pedido.codigo", index=True)
+    forma_pago_id: int = Field(foreign_key="forma_pago.id", index=True)
+    modalidad_entrega: ModalidadEntrega = Field(default=ModalidadEntrega.DELIVERY, index=True)
+    subtotal: Decimal = Field(max_digits=10, decimal_places=2)
+    total: Decimal = Field(max_digits=10, decimal_places=2)
+    costo_envio: Decimal = Field(max_digits=10, decimal_places=2)
+    notas : Optional[str] = None
 
-    items: List["ItemPedido"] = Relationship(back_populates="pedido")
-    direccion: "DireccionEntrega" = Relationship(back_populates="pedidos")
+    forma_pago_snap: Optional[str] = None
+    direccion_snap: Optional[str] = None
+
+    usuario: "Usuario" = Relationship(back_populates="pedidos")
+    estado_pedido: "EstadoPedido" = Relationship(back_populates="pedidos")
+    direccion: Optional["DireccionEntrega"] = Relationship(back_populates="pedidos")
+    detalles: List["DetallePedido"] = Relationship(
+        back_populates="pedido",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+        )
+    forma_pago: "FormaPago" = Relationship(back_populates="pedidos")
+    historial_estado_pedido: List["HistorialEstadoPedido"] = Relationship(
+        back_populates="pedido",
+        sa_relationship_kwargs={"order_by": "HistorialEstadoPedido.fecha_cambio"},
+    )
 
 

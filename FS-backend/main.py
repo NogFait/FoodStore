@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import SQLModel, Session
 
 from app.core.database import engine
-from app.core.seed import seed_admin_user
+from app.core.seed import seed_admin_user, seed_estados_pedido, seed_formas_pago
 
 # Registrar modelos sin router propio en SQLModel.metadata antes de create_all
 from app.modules.refresh_token import model as _refresh_token_model  # noqa: F401
@@ -17,6 +17,7 @@ from app.modules.ingrediente.router import router_ingrediente
 from app.modules.usuarios.router import auth as router_auth, admin as router_admin
 from app.modules.direccion.router import router_direccion
 from app.modules.unidad_medida.router import router_unidad_medida
+from app.modules.pedido.router import router_pedido
 
 
 # ─── Ciclo de vida ────────────────────────────────────────────────────────────
@@ -26,6 +27,8 @@ async def lifespan(app: FastAPI):
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
         seed_admin_user(session)
+        seed_estados_pedido(session)
+        seed_formas_pago(session)
     yield
     # Shutdown: nada por ahora
 
@@ -51,3 +54,4 @@ app.include_router(router_auth)
 app.include_router(router_admin)
 app.include_router(router_direccion)
 app.include_router(router_unidad_medida)
+app.include_router(router_pedido)

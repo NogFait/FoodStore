@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 
 class DireccionEntrega(BaseEntity, table=True):
-
+    __tablename__ = "direccion_entrega" #type: ignore
     usuario_id: int = Field(foreign_key="usuario.id", index=True)
     alias: str = Field(max_length=50)
     linea1: str
