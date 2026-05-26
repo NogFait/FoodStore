@@ -34,7 +34,7 @@ export function useIngredienteForm(
         form.setFieldValue("es_alergeno", false);
       }
     }
-  }, [ingrediente, isOpen]);
+  }, [ingrediente, isOpen,form]);
 
   return {
     form,

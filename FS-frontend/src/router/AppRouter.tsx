@@ -5,81 +5,40 @@ import CategoriasPage from "../features/categorias/pages/CategoriasPage";
 import IngredientesPage from "../features/ingredientes/pages/IngredientesPage";
 import UnidadesMedidaPage from "../features/unidades-medida/pages/UnidadesMedidaPage";
 import PedidosPage from "../features/pedidos/pages/PedidosPage";
-import DireccionesPage from "../features/direcciones/pages/DireccionesPage";
 import Login from "../features/auth/pages/Login";
 import Register from "../features/auth/pages/Register";
 import { ProtectedRoute, PublicRoute } from "../features/auth/components/ProtectedRoute";
+import { useIsAuthenticated } from "../features/auth/hooks/useAuth";
+import { FullScreenSpinner } from "../components/ui/Spinner";
+
+
+//fx para que verifique si hay usuario logueado, si no encuentra pal login, si encuentra al panel del admin
+function RootRedirect() {
+  const { isAuthenticated, isLoading } = useIsAuthenticated();
+  if (isLoading) return <FullScreenSpinner />
+  if (isAuthenticated) return <Navigate to={isAuthenticated ? "/categorias" : "/login"} replace />;
+  
+}
 
 const AppRouter = () => {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/categorias" replace />} />
-      <Route
-        path="/productos"
-        element={
-          <ProtectedRoute>
-            <ProductosPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/categorias"
-        element={
-          <ProtectedRoute>
-            <CategoriasPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/ingredientes"
-        element={
-          <ProtectedRoute>
-            <IngredientesPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/unidades-medida"
-        element={
-          <ProtectedRoute>
-            <UnidadesMedidaPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/direcciones"
-        element={
-          <ProtectedRoute>
-            <DireccionesPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/pedidos"
-        element={
-          <ProtectedRoute>
-            <PedidosPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/login"
-        element={
-          <PublicRoute>
-            <Login />
-          </PublicRoute>
-        }
-      />
-      <Route
-        path="/register"
-        element={
-          <PublicRoute>
-            <Register />
-          </PublicRoute>
-        }
-      />
+      <Route path="/" element={<RootRedirect />} />
+
+      <Route element={<ProtectedRoute />}>
+        <Route path="/productos" element={<ProductosPage />} />
+        <Route path="/categorias" element={<CategoriasPage />} />
+        <Route path="/ingredientes" element={<IngredientesPage />} />
+        <Route path="/unidades-medida" element={<UnidadesMedidaPage />} />
+        <Route path="/pedidos" element={<PedidosPage />} />
+      </Route>
+
+      <Route element={<PublicRoute />}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+      </Route>
     </Routes>
   );
-};
+}
 
 export default AppRouter;

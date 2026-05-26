@@ -1,39 +1,28 @@
 import { Navigate } from "react-router-dom";
-import type { ReactNode } from "react";
-import { useAuth } from "../hooks/useAuth";
+import { useIsAuthenticated } from "../hooks/useAuth";
+import {Outlet} from "react-router-dom";
+import { Spinner } from "../../../components/ui/Spinner";
 
-export function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { user, isLoading } = useAuth();
+export function ProtectedRoute() {
+  const { isAuthenticated, isLoading } = useIsAuthenticated();
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent" />
-      </div>
-    );
-  }
+  if (isLoading) return <Spinner />;
+// validamos que el usuario primero este autenticado, sino lo redirigimos al login
+  if ( !isAuthenticated ) return <Navigate to="/login" replace />;
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <>{children}</>;
+  return <Outlet />;
 }
 
-export function PublicRoute({ children }: { children: ReactNode }) {
-  const { user, isLoading } = useAuth();
+export function PublicRoute() {
+  const { isAuthenticated, isLoading } = useIsAuthenticated();
+  if (isLoading) return <Spinner />;
+  // Si el usuario ya está autenticado, lo redirigimos al panel de admin, sino lo dejamos acceder a las rutas públicas como login o register
+  if (isAuthenticated) return <Navigate to="/categorias" replace />;
+  return <Outlet />;
+}
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent" />
-      </div>
-    );
-  }
-
-  if (user) {
-    return <Navigate to="/categorias" replace />;
-  }
-
-  return <>{children}</>;
+export function RootRedirect() {
+  const { isAuthenticated, isLoading } = useIsAuthenticated();
+  if (isLoading) return <Spinner />;
+  if (!isAuthenticated) return <Navigate to="/" replace />;
 }

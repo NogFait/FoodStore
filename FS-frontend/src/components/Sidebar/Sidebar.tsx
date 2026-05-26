@@ -5,7 +5,7 @@ const navLinks = [
   { path: "/productos", label: "Productos" },
   { path: "/ingredientes", label: "Ingredientes" },
   { path: "/unidades-medida", label: "Unidades" },
-  { path: "/direcciones", label: "Direcciones" },
+  { path: "/pedidos", label: "Pedidos" },
 ];
 
 const Sidebar = () => {

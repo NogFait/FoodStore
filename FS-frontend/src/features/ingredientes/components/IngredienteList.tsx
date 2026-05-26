@@ -10,7 +10,9 @@ type IngredienteListProps = {
   isAdmin: boolean;
 };
 
-const IngredienteList = ({ ingredientes, onEdit, onDelete, onView, isAdmin }: IngredienteListProps) => {
+const IngredienteList = ({ ingredientes = [], onEdit, onDelete, onView, isAdmin }: IngredienteListProps) => {
+  // validamos que los ingredientes sean un array vacio, asi no explota en el fornt
+  const safeIngredientes = Array.isArray(ingredientes) ? ingredientes : [];
   const columns = useMemo(
     () => [
       {
@@ -61,9 +63,9 @@ const IngredienteList = ({ ingredientes, onEdit, onDelete, onView, isAdmin }: In
     ],
     [isAdmin]
   );
-
+// llamamos el ingredientes validado, si no viene nada array vacio
   const table = useReactTable({
-    data: ingredientes,
+    data: safeIngredientes,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });

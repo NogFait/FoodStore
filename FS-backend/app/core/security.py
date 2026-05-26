@@ -15,8 +15,8 @@ Motivación:
 from datetime import datetime, timedelta, timezone
 
 # Librería para JWT (encode/decode + manejo de errores)
-from jose import JWTError, jwt
-
+import jwt
+from jwt.exceptions import PyJWTError
 from app.core.config import settings
 
 import bcrypt
@@ -38,15 +38,16 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# JWT (JSON Web Tokens)
+# JWT (JSON Web Tokens) // GENERACIÓN Y VALIDACIÓN // PyJWT
 # ─────────────────────────────────────────────────────────────────────────────
 
-def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
+def create_access_token(data: dict, token_version: int, expires_delta: timedelta | None = None) -> str:
     """
     Genera un JWT firmado (HS256).
 
     Parámetros:
     - data: payload base (ej: {"sub": username, "role": role})
+    - token_version: versión del token para manejo de invalidación
     - expires_delta: override opcional del tiempo de expiración
 
     Comportamiento:
@@ -73,7 +74,8 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     # Agrega claims al payload
     to_encode.update({
         "type": "access",  # distingue access vs refresh (buena práctica)
-        "exp": expire      # claim estándar JWT
+        "exp": expire,      # claim estándar JWT
+        "tv":token_version
     })
 
     # Firma el token:
@@ -116,7 +118,7 @@ def decode_access_token(token: str) -> dict | None:
 
         return payload
 
-    except JWTError:
+    except PyJWTError:
         # Cualquier problema (firma, expiración, formato, etc.)
         return None
     

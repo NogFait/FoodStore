@@ -1,8 +1,10 @@
-import { useMemo } from "react";
-import { useReactTable, getCoreRowModel, flexRender } from "@tanstack/react-table";
+import { useMemo} from "react";
+import ProductoTable from "./ProductoTable";
 import type { Producto } from "../types";
 import type { Categoria } from "../../categorias/types";
 import type { Ingrediente } from "../../ingredientes/types";
+import { indexarPorId, resolveNombres } from "../utils/lookups";
+import type { ColumnDef } from "@tanstack/react-table";
 
 type ProductoListProps = {
   productos: Producto[];
@@ -14,8 +16,18 @@ type ProductoListProps = {
   isAdmin: boolean;
 };
 
-const ProductoList = ({ productos, categorias, ingredientes, onEdit, onDelete, onView, isAdmin }: ProductoListProps) => {
-  const columns = useMemo(
+const ProductoList = ({
+  productos = [],
+  categorias = [],
+  ingredientes = [],
+  onEdit,
+  onDelete,
+  onView,
+  isAdmin,
+}: ProductoListProps) => {
+  const categoriasMap = useMemo(() => indexarPorId(categorias), [categorias]);
+  const ingredientesMap = useMemo(() => indexarPorId(ingredientes), [ingredientes]);
+  const columns = useMemo<ColumnDef<Producto>[]>(
     () => [
       {
         header: "ID",
@@ -27,15 +39,18 @@ const ProductoList = ({ productos, categorias, ingredientes, onEdit, onDelete, o
       },
       {
         header: "Categorías",
-        accessorFn: (row: Producto) => row.categorias_ids?.map(id => categorias.find(c => c.id === id)?.nombre).join(", ") || "—",
+        accessorFn: (row) =>
+          resolveNombres(row.categorias_ids, categoriasMap).join(", ") || "—",
       },
       {
         header: "Ingredientes",
-        accessorFn: (row: Producto) => row.ingredientes_ids?.map(id => ingredientes.find(i => i.id === id)?.nombre).join(", ") || "—",
+        accessorFn: (row) =>
+          resolveNombres(row.ingredientes_ids, ingredientesMap).join(", ") || "—",
       },
       {
         header: "Precio",
-        accessorFn: (row: Producto) => row.precio_base != null ? `$${row.precio_base.toFixed(2)}` : "—",
+        accessorFn: (row: Producto) =>
+          row.precio_base != null ? `$${row.precio_base.toFixed(2)}` : "—",
       },
       {
         header: "Stock",
@@ -71,43 +86,13 @@ const ProductoList = ({ productos, categorias, ingredientes, onEdit, onDelete, o
         ),
       },
     ],
-    [categorias, ingredientes, isAdmin]
+    [categoriasMap, ingredientesMap, isAdmin, onEdit, onDelete, onView],
   );
-
-  const table = useReactTable({
-    data: productos,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
-
   return (
     <div className="max-w-6xl mx-auto mt-8 px-4">
       <h2 className="text-2xl font-bold text-gray-800 mb-4">Productos</h2>
       <div className="overflow-hidden rounded-xl border border-gray-200 shadow-lg">
-        <table className="w-full">
-          <thead className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th key={header.id} className="px-6 py-3 text-left text-sm font-bold uppercase tracking-wider">
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="hover:bg-gray-50 transition-colors">
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-6 py-4 text-sm text-gray-700">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <ProductoTable data={productos} columns={columns} />
       </div>
     </div>
   );

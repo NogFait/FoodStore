@@ -6,7 +6,7 @@ con @computed_field para construir DATABASE_URL automáticamente.
 Los valores sensibles (SECRET_KEY, POSTGRES_PASSWORD) viven en .env.
 """
 
-from pydantic import computed_field
+from pydantic import Field, computed_field
 from pydantic_settings import BaseSettings
 
 
@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     # ─── Base de datos (PostgreSQL — patrón u_05_v2) ──────────────────────────
     postgres_user:     str = "postgres"
     postgres_password: str = "password"
-    postgres_db:       str = "seguridad_jwt_db"
+    postgres_db:       str = "foodstore"
     postgres_host:     str = "localhost"
     postgres_port:     int = 5432
 
@@ -41,10 +41,17 @@ class Settings(BaseSettings):
         )
 
     # ─── JWT ──────────────────────────────────────────────────────────────────
-    SECRET_KEY: str                    # Obligatorio — sin default. Mínimo 32 chars.
+    SECRET_KEY: str = Field(..., min_length=32, description="Mínimo 32 caracteres (HS256 = 256 bits)")                    # Obligatorio — sin default. Mínimo 32 chars.
     ALGORITHM:  str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    COOKIE_SECURE: bool = True  # True en producción (HTTPS), False en desarrollo (HTTP)
+
+    # ─── Admin inicial (seed) ─────────────────────────────────────────────────
+    ADMIN_INITIAL_USERNAME: str = "admin"
+    ADMIN_INITIAL_EMAIL:    str = "admin@foodstore.local"
+    ADMIN_INITIAL_FULLNAME: str = "Administrador"
+    ADMIN_INITIAL_PASSWORD: str = Field(..., min_length=8, description="Password del admin seedeado al primer arranque")
 
     model_config = {
         "env_file":          ".env",
@@ -54,4 +61,4 @@ class Settings(BaseSettings):
 
 
 # Instancia global — importar desde aquí en toda la app
-settings = Settings()
+settings = Settings()   # type: ignore[call-arg]

@@ -35,3 +35,18 @@ __pycache__/
 
 *.svg
 
+
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+
+*.svg
+
+.atl/
+docker-compose.yml
+
+Parcial 2.pdf
+docs/

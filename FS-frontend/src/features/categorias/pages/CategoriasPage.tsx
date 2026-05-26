@@ -1,13 +1,11 @@
 import { useState } from "react";
-import { useCrudOperations } from "../../../hooks/useCrudOperations";
 import CategoriaList from "../components/CategoriaList";
 import CategoriaModal from "../components/CategoriaModal";
 import CategoriaDetailModal from "../components/CategoriaDetailModal";
 import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
 import type { Categoria } from "../types";
 import { useAuth } from "../../auth/hooks/useAuth";
-import { getCategorias, createCategoria, updateCategoria, deleteCategoria } from "../services/categoriaService";
-
+import { useCategoria } from "../hooks/useCategoria";
 type ModalState =
   | { type: "none" }
   | { type: "create" }
@@ -18,15 +16,9 @@ type ModalState =
 const CategoriasPage = () => {
   const [modal, setModal] = useState<ModalState>({ type: "none" });
   const { user } = useAuth();
-  const isAdmin = user?.roles.includes("admin") ?? false;
+  const isAdmin = user?.rol?.includes("ADMIN") ?? false;
 
-  const crud = useCrudOperations<Categoria>(
-    ["categorias"],
-    (p) => getCategorias(p),
-    (d) => createCategoria(d as Omit<Categoria, "id">),
-    (id, d) => updateCategoria(id, d as Partial<Categoria>),
-    (id) => deleteCategoria(id),
-  );
+  const crud = useCategoria();
 
   const handleCloseModal = () => setModal({ type: "none" });
   const handleEdit = (categoria: Categoria) => setModal({ type: "edit", categoria });
@@ -125,7 +117,7 @@ const CategoriasPage = () => {
         <CategoriaModal
           categoria={null}
           onClose={handleCloseModal}
-          onSubmit={(data) => crud.createMutation.mutate(data as any, { onSuccess: () => setModal({ type: "none" }) })}
+          onSubmit={(data) => crud.createMutation.mutate(data, { onSuccess: () => setModal({ type: "none" }) })}
           categorias={crud.data || []}
         />
       )}
@@ -134,7 +126,7 @@ const CategoriasPage = () => {
         <CategoriaModal
           categoria={modal.categoria}
           onClose={handleCloseModal}
-          onSubmit={(data) => crud.updateMutation.mutate({ id: modal.categoria.id, data: data as any }, { onSuccess: () => setModal({ type: "none" }) })}
+          onSubmit={(data) => crud.updateMutation.mutate({ id: modal.categoria.id, data: data }, { onSuccess: () => setModal({ type: "none" }) })}
           categorias={crud.data || []}
         />
       )}

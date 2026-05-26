@@ -1,59 +1,57 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlmodel import SQLModel
+from sqlmodel import SQLModel, Session
+
 from app.core.database import engine
+from app.core.seed import seed_admin_user, seed_estados_pedido, seed_formas_pago
 
-# Importamos el router de categorías (donde están los endpoints)
-from app.categoria.router import router_categoria
-from app.producto.router import router_producto
-from app.ingrediente.router import router_ingrediente
-from app.usuarios.router import router as router_usuarios
-from app.rol.router import router_rol
-from app.direccion.router import router_direccion
-from app.unidad_medida.router import router_unidad_medida
+# Registrar modelos sin router propio en SQLModel.metadata antes de create_all
+from app.modules.refresh_token import model as _refresh_token_model  # noqa: F401
+
+# Routers de dominio
+from app.modules.categoria.router import router_categoria
+from app.modules.producto.router import router_producto
+from app.modules.ingrediente.router import router_ingrediente
+from app.modules.usuarios.router import auth as router_auth, admin as router_admin
+from app.modules.direccion.router import router_direccion
+from app.modules.unidad_medida.router import router_unidad_medida
+from app.modules.pedido.router import router_pedido
 
 
-# Creamos la instancia principal de la aplicación FastAPI
-app = FastAPI()
-
-# ============================
-# CREAR TABLAS EN LA DB
-# ============================
-@app.on_event("startup")
-def on_startup():
+# ─── Ciclo de vida ────────────────────────────────────────────────────────────
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: crear tablas y seedear admin inicial
     SQLModel.metadata.create_all(engine)
+    with Session(engine) as session:
+        seed_admin_user(session)
+        seed_estados_pedido(session)
+        seed_formas_pago(session)
+    yield
+    # Shutdown: nada por ahora
 
-# ============================
-# CONFIGURACIÓN DE CORS
-# ============================
-# Esto permite que el frontend (por ejemplo React en localhost:5173)
-# pueda hacer peticiones a este backend sin que el navegador las bloquee
+
+app = FastAPI(lifespan=lifespan)
+
+
+# ─── CORS ─────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    
-    # Lista de orígenes permitidos (frontend)
-    # En este caso, permitimos el acceso desde React en localhost:5173
     allow_origins=["http://localhost:5173", "http://localhost:5174"],
     allow_credentials=True,
-    
-    # Métodos HTTP permitidos (GET, POST, PUT, DELETE, etc.)
-    # "*" significa que se permiten todos
     allow_methods=["*"],
-    
-    # Headers permitidos en las peticiones (ej: Content-Type, Authorization)
-    # "*" permite todos los headers
     allow_headers=["*"],
 )
 
-# ============================
-# REGISTRO DE RUTAS
-# ============================
-# Acá conectamos el router de categorías con la app principal
-# Todas las rutas definidas en categoria.router estarán disponibles
+
+# ─── Routers ──────────────────────────────────────────────────────────────────
 app.include_router(router_categoria)
 app.include_router(router_producto)
 app.include_router(router_ingrediente)
-app.include_router(router_usuarios)
-app.include_router(router_rol)
+app.include_router(router_auth)
+app.include_router(router_admin)
 app.include_router(router_direccion)
 app.include_router(router_unidad_medida)
+app.include_router(router_pedido)
