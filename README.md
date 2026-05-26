@@ -3,8 +3,7 @@
 Sistema de gestión integral para FoodStore con backend en FastAPI y frontend en React.
 
 # Video de Presentación de la demo del sistema
-https://youtu.be/brVARCB_zCA
-
+https://youtu.be/EuoZ2PkJ9Bo
 ## Estructura del Proyecto
 
 ```
