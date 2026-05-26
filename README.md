@@ -1,12 +1,8 @@
 # FoodStore - Sistema de Gestión de Restaurant
 
-
-
-
 Sistema de gestión integral para FoodStore con backend en FastAPI y frontend en React.
 
 # Video de Presentación de la demo del sistema
-https://youtu.be/bpHejGNNPj4
 
 ## Estructura del Proyecto
 
@@ -14,8 +10,9 @@ https://youtu.be/bpHejGNNPj4
 FoodStore/
 ├── FS-backend/              # Backend - FastAPI + SQLModel + PostgreSQL
 ├── FS-frontend/             # Admin app - React + TanStack Table + Axios
-└── FS-Frontend-cliente/     # Store app - React + Zustand + Axios
 ```
+## Link al repositorio del cliente
+https://github.com/Seb-Saez/Prog4_tpi_integrador_frontend_client
 
 ### Dos Frontends Independientes
 
