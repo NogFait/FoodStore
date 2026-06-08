@@ -5,7 +5,6 @@ from fastapi.security import OAuth2PasswordBearer
 
 from app.core.security import decode_access_token
 from app.modules.usuarios.unit_of_work import UsuarioUnitOfWork, get_uow
-from app.modules.usuarios.enums import RolEnum
 from app.modules.usuarios.schema import UserPublic
 
 
@@ -44,10 +43,19 @@ async def get_current_user(
     username: str | None = payload.get("sub")
     if username is None:
         raise credentials_exception
-    
-    token_version_claim: int | None = payload.get("tv") 
+
+    token_version_claim: int | None = payload.get("tv")
     if token_version_claim is None:
         raise credentials_exception
+
+    roles_claim: list[str] | None = payload.get("roles")
+    if roles_claim is None:
+        # Token del sistema anterior (claim "rol" en vez de "roles")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token obsoleto: cerrá sesión y volvé a iniciar",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     with uow:
         user = uow.usuarios.get_by_username(username)
@@ -71,11 +79,13 @@ async def get_current_active_user(
     return current_user
 
 
-def require_role(allowed_roles: list[RolEnum]):
+def require_role(allowed_roles: list[str]):
     async def role_checker(
         current_user: Annotated[UserPublic, Depends(get_current_active_user)],
     ) -> UserPublic:
-        if current_user.rol not in allowed_roles:
+        user_roles = set(current_user.roles)
+        allowed = set(allowed_roles)
+        if not (user_roles & allowed):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Permisos insuficientes",

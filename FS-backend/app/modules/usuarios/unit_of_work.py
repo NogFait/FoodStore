@@ -12,8 +12,7 @@ class UsuarioUnitOfWork(UnitOfWork):
     def __init__(self, session: Session) -> None:
         super().__init__(session)
         self.usuarios = UsuarioRepository(session)
-    
-    
+
 
 def get_uow(session: Annotated[Session, Depends(get_session)]) -> UsuarioUnitOfWork:
     return UsuarioUnitOfWork(session)

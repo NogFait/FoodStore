@@ -18,7 +18,7 @@ type ModalState =
 const ProductosPage = () => {
   const [modal, setModal] = useState<ModalState>({ type: "none" });
   const { user } = useAuth();
-  const isAdmin = user?.rol?.includes("ADMIN") ?? false;
+  const isAdmin = user?.roles?.includes("ADMIN") ?? false;
 
   const crud = useProductos();
 

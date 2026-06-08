@@ -5,16 +5,22 @@ from fastapi import HTTPException, status
 from app.core.config import settings
 from app.core.security import hash_password, verify_password, create_access_token
 from app.modules.usuarios.model import Usuario
-from app.modules.usuarios.enums import RolEnum
 from app.modules.usuarios.schema import UserCreate, Token, UserPublic
 from app.modules.usuarios.unit_of_work import UsuarioUnitOfWork
+from app.modules.rol.model import UsuarioRol
+from app.modules.rol.enums import RolEnum
+from app.modules.rol.unit_of_work import RolUnitOfWork
 
 
 class UsuarioService:
-    def __init__(self, uow: UsuarioUnitOfWork):
+    def __init__(self, uow: UsuarioUnitOfWork, rol_uow: RolUnitOfWork | None = None):
         self.uow = uow
+        self.rol_uow = rol_uow
 
     def register(self, user_in: UserCreate) -> UserPublic:
+        if not self.rol_uow:
+            raise RuntimeError("RolUnitOfWork requerido para registro con asignación de rol")
+
         if self.uow.usuarios.get_by_username(user_in.username):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -32,10 +38,15 @@ class UsuarioService:
             full_name=user_in.full_name,
             email=user_in.email,
             hashed_password=hash_password(user_in.password),
-            rol=RolEnum.CLIENTE,
         )
 
         nuevo = self.uow.usuarios.add(usuario)
+
+        rol_cliente = self.rol_uow.roles.get_by_codigo(RolEnum.CLIENTE)
+        if rol_cliente:
+            self.rol_uow.usuarios_roles.add(UsuarioRol(usuario_id=nuevo.id, rol_id=rol_cliente.id))
+            self.uow.usuarios.session.refresh(nuevo)
+
         return UserPublic.model_validate(nuevo)
 
     def authenticate(self, username: str, password: str) -> Token:
@@ -56,8 +67,10 @@ class UsuarioService:
                 detail="Cuenta de usuario desactivada",
             )
 
+        roles = [ur.rol.codigo for ur in user.roles if ur.rol]
+
         access_token = create_access_token(
-            data={"sub": user.username, "rol": user.rol.value},
+            data={"sub": user.username, "roles": roles},
             token_version=user.token_version,
         )
         return Token(
@@ -77,16 +90,6 @@ class UsuarioService:
                 detail="Usuario no encontrado",
             )
         user.disabled = disabled
-        return self.uow.usuarios.update(user)
-
-    def set_rol(self, user_id: int, rol: RolEnum) -> Usuario:
-        user = self.uow.usuarios.get_by_id(user_id)
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Usuario no encontrado",
-            )
-        user.rol = rol
         return self.uow.usuarios.update(user)
 
     def logout(self, user_id: int) -> None:

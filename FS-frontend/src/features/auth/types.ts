@@ -5,7 +5,7 @@ export interface usuariosRegister {
     password:  string
     
 }
-export type Role = "ADMIN" | "CLIENTE" | "COCINA";
+export type Role = "ADMIN" | "CLIENTE" | "COCINA" | "CAJA";
 export interface usuariosLogin {
     email: string
     password: string
@@ -16,7 +16,7 @@ export interface usuarioPublico {
     username: string;
     full_name: string;
     email: string;
-    rol: Role;
+    roles: Role[];
     disabled: boolean;
 }
 

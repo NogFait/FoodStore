@@ -11,15 +11,55 @@ from app.core.config import settings
 from app.core.security import hash_password
 from app.modules.estado_pedido.model import EstadoPedido
 from app.modules.forma_pago.model import FormaPago
-from app.modules.usuarios.enums import RolEnum
+from app.modules.rol.enums import RolEnum
+from app.modules.rol.model import Rol, UsuarioRol
+from app.modules.rol.unit_of_work import RolUnitOfWork
 from app.modules.usuarios.model import Usuario
 from app.modules.usuarios.unit_of_work import UsuarioUnitOfWork
 
 
+# Catálogo de roles del sistema.
+ROLES_SEED: list[dict] = [
+    {
+        "codigo": "ADMIN",
+        "descripcion": "Acceso total sin restricciones",
+    },
+    {
+        "codigo": "COCINA",
+        "descripcion": "Avanzar estados de pedidos",
+    },
+    {
+        "codigo": "CAJA",
+        "descripcion": "Actualizar stock, gestionar productos, confirmar pedidos",
+    },
+    {
+        "codigo": "CLIENTE",
+        "descripcion": "Operar solo con sus propios datos",
+    },
+]
+
+
+def seed_roles(session: Session) -> None:
+    """Crea los roles que falten. Idempotente: matchea por código."""
+    existentes_codigos = {r.codigo for r in session.exec(select(Rol)).all()}
+
+    nuevos = [
+        Rol(**data)
+        for data in ROLES_SEED
+        if data["codigo"] not in existentes_codigos
+    ]
+    if not nuevos:
+        return
+
+    for rol in nuevos:
+        session.add(rol)
+    session.commit()
+
+
 def seed_admin_user(session: Session) -> None:
     """Crea el usuario admin inicial si no hay ningún usuario con rol ADMIN."""
-    with UsuarioUnitOfWork(session) as uow:
-        existentes = uow.usuarios.get_by_rol(RolEnum.ADMIN)
+    with UsuarioUnitOfWork(session) as user_uow, RolUnitOfWork(session) as rol_uow:
+        existentes = user_uow.usuarios.get_by_rol(RolEnum.ADMIN)
         if existentes:
             return
 
@@ -28,10 +68,13 @@ def seed_admin_user(session: Session) -> None:
             full_name=settings.ADMIN_INITIAL_FULLNAME,
             email=settings.ADMIN_INITIAL_EMAIL,
             hashed_password=hash_password(settings.ADMIN_INITIAL_PASSWORD),
-            rol=RolEnum.ADMIN,
             disabled=False,
         )
-        uow.usuarios.add(admin)
+        user_uow.usuarios.add(admin)
+
+        rol_admin = rol_uow.roles.get_by_codigo("ADMIN")
+        if rol_admin:
+            rol_uow.usuarios_roles.add(UsuarioRol(usuario_id=admin.id, rol_id=rol_admin.id))
 
 
 # Catálogo de estados del flujo de pedidos.

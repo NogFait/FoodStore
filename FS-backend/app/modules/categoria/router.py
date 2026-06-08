@@ -6,7 +6,7 @@ from app.core.database import get_session
 from app.core.deps import get_current_active_user, require_role
 from .schema import CategoriaCreate, CategoriaResponse, CategoriaUpdate
 from .service import create_categoria, delete_categoria, list_categorias, update_categoria, get_categoria_by_id
-from app.modules.usuarios.enums import RolEnum
+from app.modules.rol.enums import RolEnum
 
 router_categoria = APIRouter(prefix="/api/v1/categorias", tags=["categorias"])
 

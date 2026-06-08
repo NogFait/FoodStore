@@ -5,7 +5,7 @@ from sqlmodel import Session
 
 from app.core.database import get_session
 from app.core.deps import get_current_active_user, require_role
-from app.modules.usuarios.enums import RolEnum
+from app.modules.rol.enums import RolEnum
 from app.modules.usuarios.schema import UserPublic
 
 from .schema import PedidoCreate, PedidoResponse, PedidoResumen

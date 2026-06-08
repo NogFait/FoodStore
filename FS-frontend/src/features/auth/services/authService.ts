@@ -27,13 +27,14 @@ export async function register(data: usuariosRegister): Promise<usuarioPublico> 
 function isValidUser(user: unknown): user is usuarioPublico {
   if (!user || typeof user !== "object") return false;
   const u = user as Record<string, unknown>;
+  const validRoles = ["ADMIN", "CLIENTE", "COCINA", "CAJA"];
   return (
     typeof u.id === "number" &&
     typeof u.username === "string" &&
     typeof u.full_name === "string" &&
     typeof u.email === "string" &&
-    typeof u.rol === "string" &&
-    ["ADMIN", "CLIENTE", "COCINA"].includes(u.rol as Role) &&
+    Array.isArray(u.roles) &&
+    u.roles.every((r: unknown) => typeof r === "string" && validRoles.includes(r as Role)) &&
     typeof u.disabled === "boolean" && u.disabled === false
   )
 }

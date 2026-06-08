@@ -73,7 +73,7 @@ const Login = () => {
                 <>
                   <input
                     type="password"
-                    value={field.state.value ?? ""}
+                    value={field.state.value ?? " "}
                     onChange={(e) => field.handleChange(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                     placeholder="Tu contraseña"

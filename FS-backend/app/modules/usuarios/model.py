@@ -1,9 +1,6 @@
 from typing import TYPE_CHECKING, List
 from sqlmodel import Field, Relationship
 
-
-from app.modules.usuarios.enums import RolEnum
-
 from app.core.base_model import BaseEntity
 
 if TYPE_CHECKING:
@@ -21,9 +18,7 @@ class Usuario(BaseEntity, table=True):
     email: str = Field(index=True, unique=True)
     hashed_password: str
     disabled: bool = Field(default=False)
-    rol: RolEnum = Field(default=RolEnum.CLIENTE, index=True)
     token_version: int = Field(default=0)
-
 
     direcciones: List["DireccionEntrega"] = Relationship(back_populates="usuario")
 
@@ -32,3 +27,5 @@ class Usuario(BaseEntity, table=True):
     historiales_estado_pedido: List["HistorialEstadoPedido"] = Relationship(back_populates="usuario")
 
     pedidos: List["Pedido"] = Relationship(back_populates="usuario")
+
+    roles: List["UsuarioRol"] = Relationship(back_populates="usuario")

@@ -20,8 +20,9 @@ from fastapi.security import OAuth2PasswordRequestForm
 from app.core.config import settings
 from app.core.deps import get_current_active_user, require_role
 from app.modules.usuarios.unit_of_work import UsuarioUnitOfWork, get_uow
-from app.modules.usuarios.enums import RolEnum
-from app.modules.usuarios.schema import UserCreate, UserPublic, UserRolUpdate
+from app.modules.rol.enums import RolEnum
+from app.modules.usuarios.schema import UserCreate, UserPublic
+from app.modules.rol.unit_of_work import RolUnitOfWork, get_uow as get_rol_uow
 from app.modules.usuarios.service import UsuarioService
 
 from app.core.rate_limit import register_limiter, login_limiter
@@ -41,9 +42,10 @@ admin = APIRouter(prefix="/api/v1", tags=["admin"])
 def register(
     user_in: UserCreate,
     uow: Annotated[UsuarioUnitOfWork, Depends(get_uow)],
+    rol_uow: Annotated[RolUnitOfWork, Depends(get_rol_uow)],
 ):
-    with uow:
-        service = UsuarioService(uow)
+    with uow, rol_uow:
+        service = UsuarioService(uow, rol_uow)
         return service.register(user_in)
 
 
@@ -105,7 +107,7 @@ def ruta_privada(
 ):
     return {
         "mensaje": f"¡Hola, {current_user.full_name}! Accediste a una ruta privada.",
-        "tu_rol": current_user.rol.value,
+        "roles": current_user.roles,
     }
 
 
@@ -144,13 +146,3 @@ def activate_user(
         return service.set_disabled(user_id, disabled=False)
 
 
-@admin.put("/admin/usuarios/{user_id}/rol", response_model=UserPublic)
-def update_user_rol(
-    user_id: int,
-    payload: UserRolUpdate,
-    _admin: Annotated[UserPublic, Depends(require_role([RolEnum.ADMIN]))],
-    uow: Annotated[UsuarioUnitOfWork, Depends(get_uow)],
-):
-    with uow:
-        service = UsuarioService(uow)
-        return service.set_rol(user_id, payload.rol)

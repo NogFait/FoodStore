@@ -13,7 +13,7 @@ from app.modules.pedido.enums import ModalidadEntrega
 from app.modules.pedido.model import Pedido
 from app.modules.pedido.schema import PedidoCreate
 from app.modules.pedido.unit_of_work import PedidoUnitOfWork
-from app.modules.usuarios.enums import RolEnum
+from app.modules.rol.enums import RolEnum
 from app.modules.usuarios.schema import UserPublic
 
 
@@ -195,7 +195,8 @@ class PedidoService:
     def _asegurar_acceso(self, pedido: Pedido, usuario: UserPublic) -> None:
         if pedido.usuario_id == usuario.id:
             return
-        if usuario.rol in (RolEnum.ADMIN, RolEnum.COCINA):
+        allowed_roles = {RolEnum.ADMIN, RolEnum.COCINA}
+        if set(usuario.roles) & allowed_roles:
             return
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

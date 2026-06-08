@@ -34,7 +34,7 @@ const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel }: ConfirmMo
             onClick={onConfirm}
             className="flex-1 py-3 text-red-600 font-medium border-l border-gray-200 hover:bg-red-50 transition-colors"
           >
-            Eliminar
+            Confirmar
           </button>
         </div>
       </div>

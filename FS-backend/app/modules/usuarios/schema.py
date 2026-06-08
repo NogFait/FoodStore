@@ -1,7 +1,7 @@
-from sqlmodel import SQLModel, Field
-from pydantic import EmailStr
+from typing import Any
 
-from app.modules.usuarios.enums import RolEnum
+from pydantic import EmailStr, model_validator
+from sqlmodel import SQLModel, Field
 
 
 class UserCreate(SQLModel):
@@ -18,13 +18,23 @@ class UserPublic(SQLModel):
     username:  str
     full_name: str
     email:     str
-    rol:       RolEnum
+    roles:     list[str]
     disabled:  bool
 
-
-class UserRolUpdate(SQLModel):
-    """Payload para que un admin cambie el rol de otro usuario."""
-    rol: RolEnum
+    @model_validator(mode="before")
+    @classmethod
+    def extract_roles(cls, data: Any) -> Any:
+        if hasattr(data, "roles"):
+            # Si viene una instancia ORM con relación roles → extraemos códigos
+            data = {
+                "id": data.id,
+                "username": data.username,
+                "full_name": data.full_name,
+                "email": data.email,
+                "roles": [ur.rol.codigo for ur in data.roles if ur.rol],
+                "disabled": data.disabled,
+            }
+        return data
 
 
 class Token(SQLModel):

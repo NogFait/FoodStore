@@ -23,7 +23,7 @@ type ModalState =
 const UnidadesMedidaPage = () => {
   const [modal, setModal] = useState<ModalState>({ type: "none" });
   const { user } = useAuth();
-  const isAdmin = user?.rol?.includes("ADMIN") ?? false;
+  const isAdmin = user?.roles?.includes("ADMIN") ?? false;
 
   const crud = useCrudOperations<UnidadMedida>(
     ["unidades-medida"],
