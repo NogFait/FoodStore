@@ -24,6 +24,8 @@ export function usePedidosWS() {
   };
 
   const connect = () => {
+    // evita que un timeout stale de un socket anterior mate al nuevo
+    clearTimeout(timerRef.current);
     wsRef.current?.close();
     setStatus("connecting");
 
@@ -49,7 +51,11 @@ export function usePedidosWS() {
 
       ws.onclose = () => {
         setStatus("disconnected");
-        scheduleReconnect();
+        // solo reconecta si este socket sigue siendo el actual;
+        // si fue cerrado por unmount/reconnect intencional, no reintentamos
+        if (wsRef.current === ws) {
+          scheduleReconnect();
+        }
       };
 
       ws.onerror = () => {
@@ -66,6 +72,7 @@ export function usePedidosWS() {
     return () => {
       clearTimeout(timerRef.current);
       wsRef.current?.close();
+      wsRef.current = null; // null ref para que onclose stale no reintente
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
