@@ -27,7 +27,7 @@ export async function register(data: usuariosRegister): Promise<usuarioPublico> 
 function isValidUser(user: unknown): user is usuarioPublico {
   if (!user || typeof user !== "object") return false;
   const u = user as Record<string, unknown>;
-  const validRoles = ["ADMIN", "CLIENTE", "COCINA", "CAJA"];
+  const validRoles = ["ADMIN", "COCINA", "CAJA"];
   return (
     typeof u.id === "number" &&
     typeof u.username === "string" &&
