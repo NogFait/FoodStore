@@ -3,6 +3,8 @@ import PedidoList from "../components/PedidoList";
 import PedidoDetailModal from "../components/PedidoDetailModal";
 import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
 import { usePedidos } from "../hooks/usePedidos";
+import { usePedidosWS } from "../../../hooks/usePedidosWS";
+import { useWsStore } from "../../../store/wsStore";
 import { ESTADOS_PEDIDO_CODES } from "../types";
 import type { PedidoResumen } from "../types";
 
@@ -55,6 +57,8 @@ const PedidosPage = () => {
   };
 
   const isMutating = avanzarMutation.isPending || cancelarMutation.isPending;
+  usePedidosWS();
+  const wsStatus = useWsStore((s) => s.status);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -66,12 +70,38 @@ const PedidosPage = () => {
               {data ? `${data.length} pedidos en pantalla` : "Cargando..."}
             </p>
           </div>
-          <button
-            onClick={() => refetch()}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
-          >
-            Refrescar
-          </button>
+          <div className="flex items-center gap-3">
+            <span
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                wsStatus === "connected"
+                  ? "bg-green-100 text-green-700"
+                  : wsStatus === "connecting"
+                    ? "bg-yellow-100 text-yellow-700"
+                    : "bg-red-100 text-red-700"
+              }`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  wsStatus === "connected"
+                    ? "bg-green-500"
+                    : wsStatus === "connecting"
+                      ? "bg-yellow-500 animate-pulse"
+                      : "bg-red-500"
+                }`}
+              />
+              {wsStatus === "connected"
+                ? "En vivo"
+                : wsStatus === "connecting"
+                  ? "Conectando…"
+                  : "Desconectado"}
+            </span>
+            <button
+              onClick={() => refetch()}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              Refrescar
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-4 mb-6 p-4 bg-white rounded-xl border border-gray-200">

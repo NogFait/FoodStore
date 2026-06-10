@@ -1,10 +1,11 @@
 from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, Path, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Path, Query, status
 from sqlmodel import Session
 
 from app.core.database import get_session
 from app.core.deps import get_current_active_user, require_role
+from app.core.websocket import broadcast_estado_cambiado
 from app.modules.rol.enums import RolEnum
 from app.modules.usuarios.schema import UserPublic
 
@@ -72,9 +73,24 @@ def cancelar_pedido(
     pedido_id: Annotated[int, Path(ge=1)],
     usuario: Annotated[UserPublic, Depends(get_current_active_user)],
     session: Session = Depends(get_session),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
 ):
     """Cancela un pedido si el estado actual lo permite. Dueño o admin/cocina."""
-    return PedidoService(session).cancelar(pedido_id, usuario)
+    service = PedidoService(session)
+    current = service.get_pedido(pedido_id, usuario)
+    estado_anterior: str | None = current.estado_pedido.codigo
+
+    pedido = service.cancelar(pedido_id, usuario)
+
+    background_tasks.add_task(
+        broadcast_estado_cambiado,
+        pedido_id=pedido.id,
+        estado_anterior=estado_anterior,
+        estado_nuevo=pedido.estado_pedido_codigo,
+        usuario_id=usuario.id,
+    )
+
+    return pedido
 
 
 # ============================================================
@@ -109,6 +125,21 @@ def avanzar_estado(
         Depends(require_role([RolEnum.ADMIN, RolEnum.COCINA])),
     ],
     session: Session = Depends(get_session),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
 ):
     """Avanza el pedido al siguiente estado por orden ascendente."""
-    return PedidoService(session).avanzar_estado(pedido_id, usuario)
+    service = PedidoService(session)
+    current = service.get_pedido(pedido_id, usuario)
+    estado_anterior: str | None = current.estado_pedido.codigo
+
+    pedido = service.avanzar_estado(pedido_id, usuario)
+
+    background_tasks.add_task(
+        broadcast_estado_cambiado,
+        pedido_id=pedido.id,
+        estado_anterior=estado_anterior,
+        estado_nuevo=pedido.estado_pedido_codigo,
+        usuario_id=usuario.id,
+    )
+
+    return pedido
