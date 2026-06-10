@@ -1,122 +1,130 @@
-# FoodStore - Sistema de Gestión de Restaurant
+# FoodStore - Admin App
 
-Sistema de gestión integral para FoodStore con backend en FastAPI y frontend en React.
-
-# Video de Presentación de la demo del sistema
-https://youtu.be/EuoZ2PkJ9Bo
-## Estructura del Proyecto
-
-```
-FoodStore/
-├── FS-backend/              # Backend - FastAPI + SQLModel + PostgreSQL
-├── FS-frontend/             # Admin app - React + TanStack Table + Axios
-```
-## Link al repositorio del cliente
-https://github.com/Seb-Saez/Prog4_tpi_integrador_frontend_client
-
-### Dos Frontends Independientes
-
-| App | Carpeta | Propósito | Stack |
-|-----|---------|-----------|-------|
-| **Admin** | `FS-frontend/` | Gestión interna | pnpm, TanStack Table/Form, React Router |
-
-Ambos frontends comparten el mismo backend (`localhost:8000`) y se autentican con JWT via cookies HttpOnly.
+Frontend de administración del sistema FoodStore. App interna para gestión de productos, categorías, ingredientes y pedidos.
 
 ## Tecnologías
 
-### Backend
-- **FastAPI**: Framework web moderno y rápido
-- **SQLModel**: ORM con soporte para SQLAlchemy
-- **PostgreSQL**: Base de datos relacional
-- **Python**: Lenguaje de programación
-
-### Frontend Admin (FS-frontend)
 - **React 19**: Biblioteca para interfaces de usuario
+- **TypeScript**: Tipado estático
 - **TanStack Query**: Gestión de estado del servidor
-- **TanStack Table**: Tablas con ordenamiento y acciones
+- **TanStack Table**: Tablas con ordenamiento
 - **TanStack Form**: Formularios con validación
+- **Axios**: Cliente HTTP
+- **React Router**: Navegación SPA
 - **Tailwind CSS**: Framework de estilos
-- **TypeScript**: Tipado estático
 - **Vite**: Build tool moderno
 
-### Frontend Store (FS-Frontend-cliente)
-- **React 19**: Biblioteca para interfaces de usuario
-- **TanStack Query**: Gestión de estado del servidor
-- **Zustand**: Estado global (carrito de compras)
-- **Tailwind CSS**: Framework de estilos
-- **TypeScript**: Tipado estático
-- **Vite**: Build tool moderno
+## Estructura del Proyecto (Feature-based)
 
-## Requisitos
+```
+FS-frontend/
+├── src/
+│   ├── api/                    # Cliente HTTP (Axios)
+│   │   └── api.ts
+│   ├── components/             # Componentes compartidos
+│   │   ├── Navbar/
+│   │   └── FormAlert/
+│   ├── features/               # Módulos por dominio
+│   │   ├── auth/               # Autenticación
+│   │   │   ├── context/        # AuthContext (React Context)
+│   │   │   ├── hooks/          # useAuth hook
+│   │   │   ├── pages/          # Login, Register
+│   │   │   ├── components/     # ProtectedRoute, PublicRoute
+│   │   │   └── services/       # authService (login, register, logout)
+│   │   ├── categorias/         # Gestión de categorías
+│   │   │   ├── pages/
+│   │   │   ├── components/     # CategoriaCard, CategoriaList, CategoriaModal, CategoriaDetailModal
+│   │   │   └── services/
+│   │   ├── ingredientes/       # Gestión de ingredientes
+│   │   │   ├── pages/
+│   │   │   ├── components/     # IngredienteCard, IngredienteList, IngredienteModal, IngredienteDetailModal
+│   │   │   └── services/
+│   │   ├── productos/          # Gestión de productos
+│   │   │   ├── pages/
+│   │   │   ├── components/     # ProductoCard, ProductoList, ProductoModal, ProductoDetailModal
+│   │   │   └── services/
+│   │   └── pedidos/            # Gestión de pedidos
+│   │       └── pages/          # PedidosPage (placeholder)
+│   ├── router/                 # Configuración de rutas
+│   │   └── AppRouter.tsx
+│   ├── shared/                 # Componentes compartidos entre features
+│   │   └── components/
+│   │       └── ConfirmModal/
+│   ├── types/                  # Tipos TypeScript compartidos
+│   │   ├── categoria.ts
+│   │   ├── ingrediente.ts
+│   │   ├── producto.ts
+│   │   └── usuario.ts
+│   ├── App.tsx                 # Componente principal
+│   ├── main.tsx                # Punto de entrada
+│   └── index.css               # Estilos globales
+├── .env                        # Variables de entorno
+├── index.html
+├── package.json
+├── tsconfig.json
+└── vite.config.ts
+```
 
-### Backend
-- Python 3.10+
-- PostgreSQL
+## Arquitectura: Feature-based
 
-### Frontend
-- Node.js 18+
-- pnpm (para admin) o npm (para store)
+Cada feature (auth, categorias, ingredientes, productos, pedidos) es un módulo independiente que contiene:
+
+- **pages/**: Componentes de página (rutas)
+- **components/**: Componentes de UI específicos del dominio
+- **services/**: Llamadas a la API (Axios)
+- **context/**, **hooks/**: Estado y lógica del dominio (solo auth)
 
 ## Instalación
 
-### Backend
 ```bash
-cd FS-backend
-pip install -r requirements.txt
-# Configurar variables de entorno
-python main.py
+pnpm install
 ```
 
-### Frontend Admin
+## Desarrollo
+
 ```bash
-cd FS-frontend
-pnpm install
 pnpm dev
 ```
 
-### Frontend Store
-```bash
-cd FS-Frontend-cliente
-npm install
-npm run dev
+La aplicación estará disponible en `http://localhost:5173`
+
+## Variables de Entorno
+
+```env
+VITE_API_URL=http://localhost:8000
 ```
 
-## Características
+## Rutas
 
-### Admin App
-- **Gestión de Productos**: CRUD completo con categorías e ingredientes
-- **Gestión de Categorías**: Organización de productos
-- **Gestión de Ingredientes**: Control de ingredientes y alérgenos
-- **Autenticación**: Login/register con JWT y roles (admin)
-- **Paginación**: Navegación entre páginas de resultados
-- **Filtros**: Búsqueda por disponibilidad y alérgenos
-- **Relaciones N:N**: Productos-Categorías, Productos-Ingredientes
+| Ruta | Acceso | Descripción |
+|------|--------|-------------|
+| `/` | Público | Redirige a `/categorias` |
+| `/categorias` | Protegido | CRUD de categorías |
+| `/productos` | Protegido | CRUD de productos |
+| `/ingredientes` | Protegido | CRUD de ingredientes |
+| `/pedidos` | Protegido | Listado de pedidos |
+| `/login` | Público | Inicio de sesión |
+| `/register` | Público | Registro de usuario |
 
-### Store App
-- **Catálogo de productos**: Vista con tarjetas visuales
-- **Carrito de compras**: Estado con Zustand
-- **Autenticación**: Login/register para historial de pedidos
-- **Navegación pública**: Sin necesidad de login para navegar
+## Autenticación
 
-## API Endpoints
+- Login con email y password (JWT via cookies HttpOnly)
+- Registro de nuevos usuarios
+- Protección de rutas con `ProtectedRoute`
+- Redirect a login si no hay sesión activa
+- Botón de logout en el Navbar
 
-### Productos
-- `GET /productos/` - Listar productos (soporta paginación y filtros)
-- `POST /productos/` - Crear producto
-- `GET /productos/{id}` - Obtener producto
-- `PATCH /productos/{id}` - Actualizar producto
-- `DELETE /productos/{id}` - Eliminar producto
+## Scripts
 
-### Categorías
-- `GET /categorias/` - Listar categorías
-- `POST /categorias/` - Crear categoría
-- `GET /categorias/{id}` - Obtener categoría
-- `PATCH /categorias/{id}` - Actualizar categoría
-- `DELETE /categorias/{id}` - Eliminar categoría
+| Comando | Descripción |
+|---------|-------------|
+| `pnpm dev` | Iniciar servidor de desarrollo |
+| `pnpm build` | Compilar para producción |
+| `pnpm lint` | Ejecutar linter |
+| `pnpm preview` | Previsualizar build |
 
-### Ingredientes
-- `GET /ingredientes/` - Listar ingredientes
-- `POST /ingredientes/` - Crear ingrediente
-- `GET /ingredientes/{id}` - Obtener ingrediente
-- `PATCH /ingredientes/{id}` - Actualizar ingrediente
-- `DELETE /ingredientes/{id}` - Eliminar ingrediente
+## Backend
+
+El backend corre en `http://localhost:8000`. Documentación en `/docs` (Swagger) o `/redoc`.
+
+Ver `../FS-backend/README.md` para más detalles.
