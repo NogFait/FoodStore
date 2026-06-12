@@ -6,21 +6,16 @@ export async function login(data: usuariosLogin): Promise<AuthResponse> {
   formData.append("username", data.email);
   formData.append("password", data.password);
   
-  const res = await fetch(`${API_BASE}/auth/token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: formData.toString(),
-    credentials: "include",
+  const res = await api.post<AuthResponse>(`/auth/token`, formData, {
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
   });
-  if (!res.ok) {
-    const body = await res.json().catch(() => null);
-    throw new Error(body?.detail || "Error al iniciar sesión");
-  }
-  return res.json();
+  return res.data;
 }
 
 export async function register(data: usuariosRegister): Promise<usuarioPublico> {
-  return api.post<usuarioPublico>(`${API_BASE}/auth/register`, data).then((r) => r.data);
+  return api.post<usuarioPublico>(`/auth/register`, data).then((r) => r.data);
 }
 // validar que el usuario realmente tenga id y roles asi funcona la validacion del protectedRoute
 
@@ -41,7 +36,7 @@ function isValidUser(user: unknown): user is usuarioPublico {
 
 export async function getCurrentUser(): Promise<usuarioPublico | null> {
   try {
-    const res = await api.get<usuarioPublico>(`${API_BASE}/auth/me`);
+    const res = await api.get<usuarioPublico>(`/auth/me`);
     if (!isValidUser(res.data)) return null;
     return res.data;
   } catch {
@@ -50,5 +45,5 @@ export async function getCurrentUser(): Promise<usuarioPublico | null> {
 }
 
 export async function logout(): Promise<AuthResponse> {
-  return api.post<AuthResponse>(`${API_BASE}/auth/logout`).then((r) => r.data);
+  return api.post<AuthResponse>(`/auth/logout`).then((r) => r.data);
 }
