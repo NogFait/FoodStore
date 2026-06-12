@@ -7,17 +7,19 @@ import UnidadesMedidaPage from "../features/unidades-medida/pages/UnidadesMedida
 import PedidosPage from "../features/pedidos/pages/PedidosPage";
 import Login from "../features/auth/pages/Login";
 import Register from "../features/auth/pages/Register";
-import { ProtectedRoute, PublicRoute } from "../features/auth/components/ProtectedRoute";
+import {
+  ProtectedRoute,
+  PublicRoute,
+} from "../features/auth/components/ProtectedRoute";
 import { useIsAuthenticated } from "../features/auth/hooks/useAuth";
 import { FullScreenSpinner } from "../components/ui/Spinner";
-
+import AdminLayout from "../components/layout/AdminLayout";
 
 //fx para que verifique si hay usuario logueado, si no encuentra pal login, si encuentra al panel del admin
 function RootRedirect() {
   const { isAuthenticated, isLoading } = useIsAuthenticated();
-  if (isLoading) return <FullScreenSpinner />
-  if (isAuthenticated) return <Navigate to={isAuthenticated ? "/categorias" : "/login"} replace />;
-  
+  if (isLoading) return <FullScreenSpinner />;
+  return <Navigate to={isAuthenticated ? "/categorias" : "/login"} replace />;
 }
 
 const AppRouter = () => {
@@ -26,11 +28,13 @@ const AppRouter = () => {
       <Route path="/" element={<RootRedirect />} />
 
       <Route element={<ProtectedRoute />}>
-        <Route path="/productos" element={<ProductosPage />} />
-        <Route path="/categorias" element={<CategoriasPage />} />
-        <Route path="/ingredientes" element={<IngredientesPage />} />
-        <Route path="/unidades-medida" element={<UnidadesMedidaPage />} />
-        <Route path="/pedidos" element={<PedidosPage />} />
+        <Route element={<AdminLayout />}>
+          <Route path="/productos" element={<ProductosPage />} />
+          <Route path="/categorias" element={<CategoriasPage />} />
+          <Route path="/ingredientes" element={<IngredientesPage />} />
+          <Route path="/unidades-medida" element={<UnidadesMedidaPage />} />
+          <Route path="/pedidos" element={<PedidosPage />} />
+        </Route>
       </Route>
 
       <Route element={<PublicRoute />}>
@@ -39,6 +43,6 @@ const AppRouter = () => {
       </Route>
     </Routes>
   );
-}
+};
 
 export default AppRouter;
