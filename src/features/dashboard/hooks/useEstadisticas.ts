@@ -5,6 +5,7 @@ import {
   getProductosMasVendidos,
   getVentasPorCategoria,
   getPedidosPorEstado,
+  getIngresosPorFormaPago,
   type Agrupacion,
 } from "../services/estadisticasService";
 
@@ -47,6 +48,14 @@ export function usePedidosPorEstado() {
   return useQuery({
     queryKey: ["estadisticas", "pedidos-estado"],
     queryFn: getPedidosPorEstado,
+    staleTime: STALE,
+  });
+}
+
+export function useIngresosPorFormaPago() {
+  return useQuery({
+    queryKey: ["estadisticas", "ingresos-forma-pago"],
+    queryFn: getIngresosPorFormaPago,
     staleTime: STALE,
   });
 }

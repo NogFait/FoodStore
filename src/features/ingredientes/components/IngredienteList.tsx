@@ -7,51 +7,92 @@ type IngredienteListProps = {
   onEdit: (ingrediente: Ingrediente) => void;
   onDelete: (id: number) => void;
   onView: (ingrediente: Ingrediente) => void;
+  onMarcarFaltante: (ingrediente: Ingrediente) => void;
+  onReponer: (ingrediente: Ingrediente) => void;
   isAdmin: boolean;
+  canStock: boolean;
 };
 
-const IngredienteList = ({ ingredientes = [], onEdit, onDelete, onView, isAdmin }: IngredienteListProps) => {
-  // validamos que los ingredientes sean un array vacio, asi no explota en el fornt
+const IngredienteList = ({
+  ingredientes = [],
+  onEdit,
+  onDelete,
+  onView,
+  onMarcarFaltante,
+  onReponer,
+  isAdmin,
+  canStock,
+}: IngredienteListProps) => {
   const safeIngredientes = Array.isArray(ingredientes) ? ingredientes : [];
+
   const columns = useMemo(
     () => [
-      {
-        header: "ID",
-        accessorKey: "id",
-      },
-      {
-        header: "Nombre",
-        accessorKey: "nombre",
-      },
-      {
-        header: "Descripcion",
-        accessorKey: "descripcion",
-      },
+      { header: "ID", accessorKey: "id" },
+      { header: "Nombre", accessorKey: "nombre" },
+      { header: "Descripcion", accessorKey: "descripcion" },
       {
         header: "Alergeno",
-        accessorFn: (row: Ingrediente) => row.es_alergeno ? "Sí ⚠️" : "No",
+        accessorFn: (row: Ingrediente) => (row.es_alergeno ? "Sí ⚠️" : "No"),
+      },
+      {
+        header: "Stock",
+        cell: ({ row }: { row: { original: Ingrediente } }) => {
+          const { stock_cantidad } = row.original;
+          return (
+            <span
+              className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                stock_cantidad === 0
+                  ? "bg-red-100 text-red-700"
+                  : "bg-green-100 text-green-700"
+              }`}
+            >
+              {stock_cantidad === 0 ? "Faltante" : stock_cantidad}
+            </span>
+          );
+        },
       },
       {
         header: "Acciones",
         cell: ({ row }: { row: { original: Ingrediente } }) => (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-1">
             <button
               onClick={() => onView(row.original)}
-              className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
+              className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
             >
               Ver
             </button>
+
+            {canStock && (
+              <>
+                {row.original.stock_cantidad === 0 ? (
+                  <button
+                    onClick={() => onReponer(row.original)}
+                    className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-colors"
+                  >
+                    Reponer
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => onMarcarFaltante(row.original)}
+                    className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded-full hover:bg-red-200 transition-colors"
+                  >
+                    Marcar faltante
+                  </button>
+                )}
+              </>
+            )}
+
             {isAdmin && (
               <>
                 <button
                   onClick={() => onEdit(row.original)}
-                  className="px-3 py-1 text-sm bg-amber-100 text-amber-700 rounded-full hover:bg-amber-200 transition-colors"
+                  className="px-2 py-1 text-xs bg-amber-100 text-amber-700 rounded-full hover:bg-amber-200 transition-colors"
                 >
                   Editar
                 </button>
                 <button
                   onClick={() => onDelete(row.original.id)}
-                  className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-full hover:bg-red-200 transition-colors"
+                  className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded-full hover:bg-red-200 transition-colors"
                 >
                   Eliminar
                 </button>
@@ -61,9 +102,9 @@ const IngredienteList = ({ ingredientes = [], onEdit, onDelete, onView, isAdmin 
         ),
       },
     ],
-    [isAdmin]
+    [isAdmin, canStock, onView, onEdit, onDelete, onMarcarFaltante, onReponer],
   );
-// llamamos el ingredientes validado, si no viene nada array vacio
+
   const table = useReactTable({
     data: safeIngredientes,
     columns,
@@ -79,8 +120,14 @@ const IngredienteList = ({ ingredientes = [], onEdit, onDelete, onView, isAdmin 
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <th key={header.id} className="px-6 py-3 text-left text-sm font-bold uppercase tracking-wider">
-                    {flexRender(header.column.columnDef.header, header.getContext())}
+                  <th
+                    key={header.id}
+                    className="px-6 py-3 text-left text-sm font-bold uppercase tracking-wider"
+                  >
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext(),
+                    )}
                   </th>
                 ))}
               </tr>
@@ -90,7 +137,10 @@ const IngredienteList = ({ ingredientes = [], onEdit, onDelete, onView, isAdmin 
             {table.getRowModel().rows.map((row) => (
               <tr key={row.id} className="hover:bg-gray-50 transition-colors">
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-6 py-4 text-sm text-gray-700">
+                  <td
+                    key={cell.id}
+                    className="px-6 py-4 text-sm text-gray-700"
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}

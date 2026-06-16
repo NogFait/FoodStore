@@ -20,6 +20,7 @@ import {
   useProductosMasVendidos,
   useVentasPorCategoria,
   usePedidosPorEstado,
+  useIngresosPorFormaPago,
 } from "../hooks/useEstadisticas";
 import { StatCard } from "../components/StatCard";
 import { ChartSkeleton } from "../components/ChartSkeleton";
@@ -57,6 +58,7 @@ const DashboardPage = () => {
   const topProductos = useProductosMasVendidos(10);
   const ventasCategoria = useVentasPorCategoria();
   const pedidosEstado = usePedidosPorEstado();
+  const ingresosPago = useIngresosPorFormaPago();
 
   const lineData = (ventasPeriodo.data ?? []).map((v) => ({
     periodo: v.periodo,
@@ -81,6 +83,12 @@ const DashboardPage = () => {
     fill: PIE_COLORS[i % PIE_COLORS.length],
   }));
 
+  const pagoData = (ingresosPago.data ?? []).map((p) => ({
+    forma_pago: p.forma_pago,
+    total: p.total,
+    cantidad: p.cantidad,
+  }));
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -90,30 +98,25 @@ const DashboardPage = () => {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatCard
-            label="Total Pedidos"
-            value={resumen.data?.total_pedidos ?? 0}
+            label="Ventas hoy"
+            value={resumen.data ? formatCurrency(resumen.data.ventas_hoy) : "-"}
             loading={resumen.isLoading}
           />
           <StatCard
-            label="Ventas Totales"
-            value={resumen.data ? formatCurrency(resumen.data.ventas_totales) : "-"}
-            loading={resumen.isLoading}
-          />
-          <StatCard
-            label="Ticket Promedio"
+            label="Ticket promedio"
             value={resumen.data ? formatCurrency(resumen.data.ticket_promedio) : "-"}
             loading={resumen.isLoading}
           />
           <StatCard
-            label="Pedidos Pendientes"
+            label="Pedidos activos"
             value={resumen.data?.pedidos_pendientes ?? 0}
             loading={resumen.isLoading}
           />
           <StatCard
-            label="Productos Activos"
-            value={resumen.data?.productos_activos ?? 0}
+            label="Mes actual"
+            value={resumen.data ? formatCurrency(resumen.data.ventas_mes) : "-"}
             loading={resumen.isLoading}
           />
         </div>
@@ -200,6 +203,47 @@ const DashboardPage = () => {
                   activeDot={{ r: 4 }}
                 />
               </LineChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        {/* Ingresos por forma de pago — horizontal BarChart (4th chart) */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-6">Ingresos por forma de pago</h2>
+          {ingresosPago.isLoading ? (
+            <ChartSkeleton title="" height={256} />
+          ) : pagoData.length === 0 ? (
+            <div className="h-64 flex items-center justify-center text-gray-400 text-sm">
+              Sin datos disponibles
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={256}>
+              <BarChart data={pagoData} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+                <XAxis
+                  type="number"
+                  tick={{ fontSize: 11, fill: "#6b7280" }}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(v: number) => `$${v.toLocaleString("es-AR")}`}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="forma_pago"
+                  tick={{ fontSize: 11, fill: "#6b7280" }}
+                  tickLine={false}
+                  width={110}
+                />
+                <Tooltip
+                  formatter={(value, name) =>
+                    name === "total"
+                      ? [formatCurrency(Number(value)), "Total"]
+                      : [value, "Cantidad"]
+                  }
+                  contentStyle={{ borderRadius: 8, border: "1px solid #e5e7eb" }}
+                />
+                <Bar dataKey="total" fill="#f59e0b" radius={[0, 4, 4, 0]} name="total" />
+              </BarChart>
             </ResponsiveContainer>
           )}
         </div>

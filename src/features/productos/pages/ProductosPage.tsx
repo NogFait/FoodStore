@@ -4,8 +4,8 @@ import ProductoModal from "../components/ProductoModal";
 import ProductoDetailModal from "../components/ProductoDetailModal";
 import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
 import type { Producto } from "../types";
-import { useAuth } from "../../auth/hooks/useAuth";
 import { useProductos } from "../hooks/useProductos";
+import { useRole } from "../../../hooks/useRole";
 import { useProductoFormData } from "../hooks/useProductoFormData";
 import { ProductListSkeleton } from "../../../components/ui/Skeleton";
 
@@ -20,8 +20,7 @@ const ProductosPage = () => {
   const [modal, setModal] = useState<ModalState>({ type: "none" });
   const [searchText, setSearchText] = useState("");
   const [categoriaFilter, setCategoriaFilter] = useState<number | "">("");
-  const { user } = useAuth();
-  const isAdmin = user?.roles?.includes("ADMIN") ?? false;
+  const { isAdmin } = useRole();
 
   const crud = useProductos();
 

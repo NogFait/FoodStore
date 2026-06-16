@@ -6,6 +6,8 @@ export interface ResumenStats {
   ticket_promedio: string;
   pedidos_pendientes: number;
   productos_activos: number;
+  ventas_hoy: string;
+  ventas_mes: string;
 }
 
 export interface VentaPeriodo {
@@ -30,6 +32,12 @@ export interface VentaCategoria {
 
 export interface PedidoEstado {
   estado: string;
+  cantidad: number;
+}
+
+export interface IngresoFormaPago {
+  forma_pago: string;
+  total: number;
   cantidad: number;
 }
 
@@ -65,4 +73,10 @@ export function getVentasPorCategoria(): Promise<VentaCategoria[]> {
 
 export function getPedidosPorEstado(): Promise<PedidoEstado[]> {
   return api.get<PedidoEstado[]>("/estadisticas/pedidos-por-estado").then((r) => r.data);
+}
+
+export function getIngresosPorFormaPago(): Promise<IngresoFormaPago[]> {
+  return api
+    .get<IngresoFormaPago[]>("/estadisticas/ingresos-por-forma-pago")
+    .then((r) => r.data);
 }

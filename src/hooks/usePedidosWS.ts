@@ -1,80 +1,72 @@
-import { useEffect, useRef } from "react";
+import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useWsStore } from "../store/wsStore";
-const WS_URL = import.meta.env.VITE_APP_ENV === "prod" ? import.meta.env.VITE_WS_URL : "ws://localhost:8000/ws/pedidos";
+import { useWsConnection } from "./useWsConnection";
+import type { PedidoResumen, EstadoPedidoCode } from "../features/pedidos/types";
+import { construirEstadoPedido } from "../features/pedidos/utils";
 
-const RECONNECT_BASE_MS = 2_000;
-const RECONNECT_MAX_MS = 30_000;
+const WS_URL =
+  import.meta.env.VITE_APP_ENV === "prod"
+    ? (import.meta.env.VITE_WS_URL as string)
+    : "ws://localhost:8000/ws/pedidos";
+
+interface EstadoCambiadoPayload {
+  event: "estado_cambiado";
+  pedido_id: number;
+  estado_nuevo: string;
+  estado_anterior: string | null;
+}
+
+function isEstadoCambiadoPayload(v: unknown): v is EstadoCambiadoPayload {
+  return (
+    typeof v === "object" &&
+    v !== null &&
+    (v as Record<string, unknown>)["event"] === "estado_cambiado"
+  );
+}
 
 export function usePedidosWS() {
-  const setStatus = useWsStore((s) => s.setStatus);
   const queryClient = useQueryClient();
-  const wsRef = useRef<WebSocket | null>(null);
-  const retryRef = useRef(0);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  const scheduleReconnect = () => {
-    const delay = Math.min(
-      RECONNECT_BASE_MS * 2 ** retryRef.current,
-      RECONNECT_MAX_MS,
-    );
-    retryRef.current += 1;
-    timerRef.current = setTimeout(connect, delay);
-  };
+  const onMessage = useCallback(
+    (data: unknown) => {
+      if (!isEstadoCambiadoPayload(data)) return;
 
-  const connect = () => {
-    // evita que un timeout stale de un socket anterior mate al nuevo
-    clearTimeout(timerRef.current);
-    wsRef.current?.close();
-    setStatus("connecting");
+      const { pedido_id, estado_nuevo } = data;
 
-    try {
-      const ws = new WebSocket(WS_URL);
-      wsRef.current = ws;
+      // Cache surgery: update any cached PedidoResumen list that contains
+      // this pedido_id, moving it to its new estado without a full refetch.
+      // Falls back to a blanket invalidate so the next focus/mount refetches.
+      let updatedInCache = false;
 
-      ws.onopen = () => {
-        retryRef.current = 0;
-        setStatus("connected");
-      };
+      queryClient.setQueriesData<PedidoResumen[]>(
+        { queryKey: ["pedidos"] },
+        (prev) => {
+          if (!prev) return prev;
+          const idx = prev.findIndex((p) => p.id === pedido_id);
+          if (idx === -1) return prev;
 
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data.event === "estado_cambiado") {
-            queryClient.invalidateQueries({ queryKey: ["pedidos"] });
-          }
-        } catch {
-          // ignore malformed messages
-        }
-      };
+          updatedInCache = true;
+          const pedido = prev[idx];
+          const updated: PedidoResumen = {
+            ...pedido,
+            estado_pedido: construirEstadoPedido(estado_nuevo as EstadoPedidoCode),
+          };
+          const copy = [...prev];
+          copy[idx] = updated;
+          return copy;
+        },
+      );
 
-      ws.onclose = () => {
-        setStatus("disconnected");
-        // solo reconecta si este socket sigue siendo el actual;
-        // si fue cerrado por unmount/reconnect intencional, no reintentamos
-        if (wsRef.current === ws) {
-          scheduleReconnect();
-        }
-      };
+      if (!updatedInCache) {
+        // Pedido not yet in any cached list — do a full invalidate
+        queryClient.invalidateQueries({ queryKey: ["pedidos"] });
+      }
 
-      ws.onerror = () => {
-        setStatus("error");
-      };
-    } catch {
-      setStatus("error");
-      scheduleReconnect();
-    }
-  };
+      // Also invalidate the individual pedido detail cache
+      queryClient.invalidateQueries({ queryKey: ["pedido", pedido_id] });
+    },
+    [queryClient],
+  );
 
-  useEffect(() => {
-    connect();
-    return () => {
-      clearTimeout(timerRef.current);
-      wsRef.current?.close();
-      wsRef.current = null; // null ref para que onclose stale no reintente
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  return { reconnect: connect };
+  return useWsConnection(WS_URL, onMessage);
 }

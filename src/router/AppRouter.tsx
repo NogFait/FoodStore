@@ -6,6 +6,7 @@ import IngredientesPage from "../features/ingredientes/pages/IngredientesPage";
 import UnidadesMedidaPage from "../features/unidades-medida/pages/UnidadesMedidaPage";
 import PedidosPage from "../features/pedidos/pages/PedidosPage";
 import DashboardPage from "../features/dashboard/pages/DashboardPage";
+import UsuariosPage from "../features/usuarios/pages/UsuariosPage";
 import Login from "../features/auth/pages/Login";
 import Register from "../features/auth/pages/Register";
 import {
@@ -36,6 +37,7 @@ const AppRouter = () => {
           <Route path="/unidades-medida" element={<UnidadesMedidaPage />} />
           <Route path="/pedidos" element={<PedidosPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/usuarios" element={<UsuariosPage />} />
         </Route>
       </Route>
 

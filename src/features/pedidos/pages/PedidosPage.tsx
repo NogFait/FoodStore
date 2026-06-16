@@ -1,68 +1,93 @@
 import { useState } from "react";
-import PedidoList from "../components/PedidoList";
+import { toast } from "sonner";
 import PedidoDetailModal from "../components/PedidoDetailModal";
-import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
+import CancelarPedidoModal from "../components/CancelarPedidoModal";
+import KanbanBoard from "../components/KanbanBoard";
 import { usePedidos } from "../hooks/usePedidos";
 import { usePedidosWS } from "../../../hooks/usePedidosWS";
 import { useWsStore } from "../../../store/wsStore";
-import { ESTADOS_PEDIDO_CODES } from "../types";
+import { useRole } from "../../../hooks/useRole";
 import type { PedidoResumen } from "../types";
+import type { Rol } from "../utils";
+import { avanzarEstado } from "../services/pedidoService";
 
 type ModalState =
   | { type: "none" }
   | { type: "detail"; pedidoId: number }
-  | { type: "confirm-avanzar"; pedido: PedidoResumen }
   | { type: "confirm-cancelar"; pedido: PedidoResumen };
 
 const PedidosPage = () => {
   const [modal, setModal] = useState<ModalState>({ type: "none" });
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-    filters,
-    setFilters,
-    avanzarMutation,
-    cancelarMutation,
-  } = usePedidos();
+  const { data, isLoading, error, refetch, cancelarMutation } = usePedidos();
+  const { reconnect } = usePedidosWS();
+  const wsStatus = useWsStore((s) => s.status);
+  const { isAdmin, isCocina, isCaja } = useRole();
 
   const closeModal = () => setModal({ type: "none" });
 
   const handleView = (p: PedidoResumen) =>
     setModal({ type: "detail", pedidoId: p.id });
-  const handleAvanzar = (p: PedidoResumen) =>
-    setModal({ type: "confirm-avanzar", pedido: p });
+
   const handleCancelar = (p: PedidoResumen) =>
     setModal({ type: "confirm-cancelar", pedido: p });
 
-  const confirmAvanzar = () => {
-    if (modal.type === "confirm-avanzar") {
-      avanzarMutation.mutate(modal.pedido.id, { onSuccess: closeModal });
-    }
-  };
+  const cancelarFromDetail = (id: number) =>
+    setModal({
+      type: "confirm-cancelar",
+      pedido: { id } as PedidoResumen,
+    });
 
-  const confirmCancelar = () => {
-    if (modal.type === "confirm-cancelar") {
-      cancelarMutation.mutate(modal.pedido.id, { onSuccess: closeModal });
-    }
-  };
-
+  // avanzarFromDetail delegates directly to the backend — KanbanBoard handles
+  // the Kanban transitions; detail modal just needs a simple advance
   const avanzarFromDetail = (id: number) => {
-    avanzarMutation.mutate(id, { onSuccess: closeModal });
+    const pedido = data?.find((p) => p.id === id);
+    if (!pedido) return;
+
+    void avanzarEstado(id)
+      .then((updated) => {
+        toast.success(`Pedido #${id} → ${updated.estado_pedido.nombre}`);
+        closeModal();
+        void refetch();
+      })
+      .catch((err: unknown) => {
+        let message = "No se pudo avanzar el pedido.";
+        if (err !== null && typeof err === "object" && "response" in err) {
+          const response = (err as { response?: { data?: { detail?: string }; status?: number } }).response;
+          const detail = response?.data?.detail;
+          const status = response?.status;
+          if (status === 409) {
+            message = `Ingrediente faltante: ${detail ?? "ingrediente sin stock"}`;
+          } else if (status === 403) {
+            message = "Sin permisos para esta transición.";
+          } else if (status === 400) {
+            message = detail ?? "Transición no válida.";
+          } else if (typeof detail === "string") {
+            message = detail;
+          }
+        }
+        toast.error(message);
+      });
   };
 
-  const cancelarFromDetail = (id: number) => {
-    cancelarMutation.mutate(id, { onSuccess: closeModal });
-  };
+  const rolesUsuario: Rol[] = [
+    ...(isAdmin ? (["ADMIN"] as Rol[]) : []),
+    ...(isCocina ? (["COCINA"] as Rol[]) : []),
+    ...(isCaja ? (["CAJA"] as Rol[]) : []),
+  ];
 
-  const isMutating = avanzarMutation.isPending || cancelarMutation.isPending;
-  usePedidosWS();
-  const wsStatus = useWsStore((s) => s.status);
+  const confirmCancelar = (motivo: string) => {
+    if (modal.type === "confirm-cancelar") {
+      cancelarMutation.mutate(
+        { id: modal.pedido.id, motivo },
+        { onSuccess: closeModal },
+      );
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Pedidos</h1>
@@ -71,6 +96,7 @@ const PedidosPage = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
+            {/* WS indicator */}
             <span
               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
                 wsStatus === "connected"
@@ -95,8 +121,16 @@ const PedidosPage = () => {
                   ? "Conectando…"
                   : "Desconectado"}
             </span>
+            {wsStatus !== "connected" && (
+              <button
+                onClick={() => reconnect()}
+                className="text-xs text-indigo-600 hover:underline"
+              >
+                Reconectar
+              </button>
+            )}
             <button
-              onClick={() => refetch()}
+              onClick={() => void refetch()}
               className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
             >
               Refrescar
@@ -104,74 +138,19 @@ const PedidosPage = () => {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4 mb-6 p-4 bg-white rounded-xl border border-gray-200">
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Estado:</label>
-            <select
-              value={filters.estado_codigo ?? ""}
-              onChange={(e) => {
-                const val = e.target.value;
-                setFilters((prev) => ({
-                  ...prev,
-                  estado_codigo: val === "" ? undefined : val,
-                  offset: 0,
-                }));
-              }}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            >
-              <option value="">Todos</option>
-              {ESTADOS_PEDIDO_CODES.map((code) => (
-                <option key={code} value={code}>
-                  {code}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2 ml-auto">
-            <button
-              onClick={() =>
-                setFilters((prev) => ({
-                  ...prev,
-                  offset: Math.max(0, prev.offset - prev.limit),
-                }))
-              }
-              disabled={filters.offset === 0}
-              className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Anterior
-            </button>
-            <span className="text-sm text-gray-600">
-              Página {Math.floor(filters.offset / filters.limit) + 1}
-            </span>
-            <button
-              onClick={() =>
-                setFilters((prev) => ({
-                  ...prev,
-                  offset: prev.offset + prev.limit,
-                }))
-              }
-              disabled={!data || data.length < filters.limit}
-              className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Siguiente
-            </button>
-          </div>
-        </div>
-
+        {/* Loading */}
         {isLoading && (
           <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent" />
           </div>
         )}
 
-        {error && (
+        {/* Error */}
+        {error && !isLoading && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-            <p className="text-red-600 font-medium">
-              No se pudieron cargar los pedidos
-            </p>
+            <p className="text-red-600 font-medium">No se pudieron cargar los pedidos</p>
             <button
-              onClick={() => refetch()}
+              onClick={() => void refetch()}
               className="mt-4 text-sm text-indigo-600 hover:text-indigo-800 font-medium"
             >
               Reintentar
@@ -179,52 +158,34 @@ const PedidosPage = () => {
           </div>
         )}
 
-        {data && data.length === 0 && !isLoading && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              No hay pedidos para mostrar
-            </h3>
-            <p className="text-gray-500">
-              Probá cambiar el filtro o esperá a que entren nuevos pedidos.
-            </p>
-          </div>
-        )}
-
-        {data && data.length > 0 && (
-          <PedidoList
+        {/* Kanban board */}
+        {data && !isLoading && (
+          <KanbanBoard
             pedidos={data}
+            rolesUsuario={rolesUsuario}
+            canCancelar={isAdmin}
             onView={handleView}
-            onAvanzar={handleAvanzar}
             onCancelar={handleCancelar}
           />
         )}
       </div>
 
+      {/* Modals */}
       {modal.type === "detail" && (
         <PedidoDetailModal
           pedidoId={modal.pedidoId}
           onClose={closeModal}
           onAvanzar={avanzarFromDetail}
           onCancelar={cancelarFromDetail}
-          isMutating={isMutating}
-        />
-      )}
-
-      {modal.type === "confirm-avanzar" && (
-        <ConfirmModal
-          isOpen={true}
-          title="Avanzar estado"
-          message={`¿Avanzar el pedido #${modal.pedido.id} al siguiente estado?`}
-          onConfirm={confirmAvanzar}
-          onCancel={closeModal}
+          isMutating={cancelarMutation.isPending}
         />
       )}
 
       {modal.type === "confirm-cancelar" && (
-        <ConfirmModal
+        <CancelarPedidoModal
           isOpen={true}
-          title="Cancelar pedido"
-          message={`¿Cancelar el pedido #${modal.pedido.id}? Esta acción no se puede deshacer.`}
+          pedidoId={modal.pedido.id}
+          isPending={cancelarMutation.isPending}
           onConfirm={confirmCancelar}
           onCancel={closeModal}
         />
