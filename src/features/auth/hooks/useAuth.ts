@@ -1,15 +1,21 @@
-import { useContext } from "react";
-import { AuthContext } from "../context/AuthContext";
+import { useAuthStore } from "../../../store/authStore";
 
+/**
+ * useAuth — stable public API consumed by all feature components.
+ * Reads from the Zustand authStore; AuthProvider bootstraps it on mount.
+ */
 export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth debe usarse dentro de un AuthProvider");
-  }
-  return context;
+  const user = useAuthStore((s) => s.user);
+  const isLoading = useAuthStore((s) => s.isLoading);
+  const login = useAuthStore((s) => s.login);
+  const register = useAuthStore((s) => s.register);
+  const logout = useAuthStore((s) => s.logout);
+
+  return { user, isLoading, login, register, logout };
 }
 
 export function useIsAuthenticated() {
-  const { user, isLoading } = useAuth();
+  const user = useAuthStore((s) => s.user);
+  const isLoading = useAuthStore((s) => s.isLoading);
   return { isAuthenticated: !!user, isLoading };
 }

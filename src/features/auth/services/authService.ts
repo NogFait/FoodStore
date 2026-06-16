@@ -1,4 +1,4 @@
-import api, { API_BASE } from "../../../api/api";
+import api from "../../../api/api";
 import type { usuarioPublico, usuariosLogin, usuariosRegister, AuthResponse,Role } from "../types";
 
 export async function login(data: usuariosLogin): Promise<AuthResponse> {
@@ -22,7 +22,7 @@ export async function register(data: usuariosRegister): Promise<usuarioPublico> 
 function isValidUser(user: unknown): user is usuarioPublico {
   if (!user || typeof user !== "object") return false;
   const u = user as Record<string, unknown>;
-  const validRoles = ["ADMIN", "COCINA", "CAJA"];
+  const validRoles: Role[] = ["ADMIN", "PEDIDOS", "STOCK", "CLIENT"];
   return (
     typeof u.id === "number" &&
     typeof u.username === "string" &&

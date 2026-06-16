@@ -3,6 +3,7 @@ import type { Producto } from "../types";
 import type { Categoria } from "../../categorias/types";
 import type { Ingrediente } from "../../ingredientes/types";
 import type { UnidadMedida } from "../../unidades-medida/types";
+import { ImageUploader } from "./ImageUploader";
 
 type ProductoModalProps = {
   isOpen: boolean;
@@ -186,15 +187,13 @@ const ProductoModal = ({ isOpen, producto, onClose, onSubmit, categorias, ingred
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">URL de Imagen</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Imágenes</label>
               <form.Field
                 name="imagenes_url"
                 children={(field) => (
-                  <input
-                    type="text"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  <ImageUploader
+                    urls={field.state.value ?? []}
+                    onChange={(urls) => field.handleChange(urls)}
                   />
                 )}
               />

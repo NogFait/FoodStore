@@ -21,7 +21,7 @@ export function useProductoForm(
       precio_base: 0,
       stock_cantidad: 0,
       disponible: true,
-      imagenes_url: "",
+      imagenes_url: [] as string[],
       unidad_venta_id: undefined as number | undefined,
       categorias_ids: [] as number[],
       ingredientes: [] as ProductoIngrediente[],
@@ -33,7 +33,7 @@ export function useProductoForm(
         precio_base: value.precio_base,
         stock_cantidad: value.stock_cantidad,
         disponible: value.disponible,
-        imagenes_url: value.imagenes_url?.trim() || null,
+        imagenes_url: value.imagenes_url.length > 0 ? value.imagenes_url : null,
         unidad_venta_id: value.unidad_venta_id || undefined,
         categorias_ids: value.categorias_ids,
         ingredientes_ids: value.ingredientes.map((i) => i.ingrediente_id),
@@ -50,7 +50,7 @@ export function useProductoForm(
         form.setFieldValue("precio_base", producto.precio_base);
         form.setFieldValue("disponible", producto.disponible);
         form.setFieldValue("stock_cantidad", producto.stock_cantidad);
-        form.setFieldValue("imagenes_url", producto.imagenes_url || "");
+        form.setFieldValue("imagenes_url", producto.imagenes_url ?? []);
         form.setFieldValue("unidad_venta_id", producto.unidad_venta_id);
         form.setFieldValue("categorias_ids", producto.categorias_ids);
         form.setFieldValue("ingredientes", producto.ingredientes || []);
@@ -60,7 +60,7 @@ export function useProductoForm(
         form.setFieldValue("precio_base", 0);
         form.setFieldValue("disponible", true);
         form.setFieldValue("stock_cantidad", 0);
-        form.setFieldValue("imagenes_url", "");
+        form.setFieldValue("imagenes_url", []);
         form.setFieldValue("unidad_venta_id", undefined);
         form.setFieldValue("categorias_ids", []);
         form.setFieldValue("ingredientes", []);

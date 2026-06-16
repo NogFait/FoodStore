@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import ProductoList from "../components/ProductoList";
 import ProductoModal from "../components/ProductoModal";
 import ProductoDetailModal from "../components/ProductoDetailModal";
@@ -7,6 +7,7 @@ import type { Producto } from "../types";
 import { useAuth } from "../../auth/hooks/useAuth";
 import { useProductos } from "../hooks/useProductos";
 import { useProductoFormData } from "../hooks/useProductoFormData";
+import { ProductListSkeleton } from "../../../components/ui/Skeleton";
 
 type ModalState =
   | { type: "none" }
@@ -17,12 +18,30 @@ type ModalState =
 
 const ProductosPage = () => {
   const [modal, setModal] = useState<ModalState>({ type: "none" });
+  const [searchText, setSearchText] = useState("");
+  const [categoriaFilter, setCategoriaFilter] = useState<number | "">("");
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes("ADMIN") ?? false;
 
   const crud = useProductos();
 
   const { categorias, ingredientes, unidadesMedida } = useProductoFormData();
+
+  const filteredProductos = useMemo(() => {
+    if (!crud.data) return undefined;
+    let result: Producto[] = crud.data;
+
+    if (searchText.trim()) {
+      const q = searchText.trim().toLowerCase();
+      result = result.filter((p) => p.nombre.toLowerCase().includes(q));
+    }
+
+    if (categoriaFilter !== "") {
+      result = result.filter((p) => p.categorias_ids.includes(categoriaFilter as number));
+    }
+
+    return result;
+  }, [crud.data, searchText, categoriaFilter]);
 
   const handleCloseModal = () => setModal({ type: "none" });
 
@@ -47,8 +66,8 @@ const ProductosPage = () => {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Productos</h1>
             <p className="mt-1 text-sm text-gray-500">
-              {crud.data
-                ? `${crud.data.length} productos encontrados`
+              {filteredProductos !== undefined
+                ? `${filteredProductos.length} productos encontrados`
                 : "Cargando..."}
             </p>
           </div>
@@ -76,6 +95,35 @@ const ProductosPage = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-4 mb-6 p-4 bg-white rounded-xl border border-gray-200">
+          {/* Text search */}
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Buscar por nombre..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm w-52"
+            />
+          </div>
+
+          {/* Category filter */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Categoría:</label>
+            <select
+              value={categoriaFilter}
+              onChange={(e) => setCategoriaFilter(e.target.value === "" ? "" : Number(e.target.value))}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+            >
+              <option value="">Todas</option>
+              {categorias.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Disponibilidad filter */}
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium text-gray-700">
               Disponibilidad:
@@ -94,7 +142,7 @@ const ProductosPage = () => {
                   skip: 0,
                 }));
               }}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
             >
               <option value="">Todos</option>
               <option value="true">Con stock</option>
@@ -134,11 +182,7 @@ const ProductosPage = () => {
           </div>
         </div>
 
-        {crud.isLoading && (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent"></div>
-          </div>
-        )}
+        {crud.isLoading && <ProductListSkeleton count={6} />}
 
         {crud.error && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
@@ -167,7 +211,7 @@ const ProductosPage = () => {
           </div>
         )}
 
-        {crud.data && crud.data.length === 0 && (
+        {filteredProductos && filteredProductos.length === 0 && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
             <svg
               className="mx-auto h-16 w-16 text-gray-300 mb-4"
@@ -186,14 +230,16 @@ const ProductosPage = () => {
               No hay productos
             </h3>
             <p className="text-gray-500 mb-6">
-              Comenza agregando tu primer producto
+              {searchText || categoriaFilter !== ""
+                ? "No se encontraron productos con los filtros aplicados"
+                : "Comenzá agregando tu primer producto"}
             </p>
           </div>
         )}
 
-        {crud.data && crud.data.length > 0 && (
+        {filteredProductos && filteredProductos.length > 0 && (
           <ProductoList
-            productos={crud.data}
+            productos={filteredProductos}
             categorias={categorias || []}
             ingredientes={ingredientes || []}
             onEdit={handleEdit}

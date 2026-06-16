@@ -5,7 +5,7 @@ export interface usuariosRegister {
     password:  string
     
 }
-export type Role = "ADMIN" | "CLIENTE" | "COCINA" | "CAJA";
+export type Role = "ADMIN" | "CLIENT" | "PEDIDOS" | "STOCK";
 export interface usuariosLogin {
     email: string
     password: string
