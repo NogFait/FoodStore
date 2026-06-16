@@ -3,7 +3,7 @@ import type { Producto } from "../types";
 import type { Categoria } from "../../categorias/types";
 import type { Ingrediente } from "../../ingredientes/types";
 import type { UnidadMedida } from "../../unidades-medida/types";
-import { ImageUploader } from "./ImageUploader";
+import { SharedImageUploader } from "../../../components/ui/SharedImageUploader";
 
 type ProductoModalProps = {
   isOpen: boolean;
@@ -191,7 +191,8 @@ const ProductoModal = ({ isOpen, producto, onClose, onSubmit, categorias, ingred
               <form.Field
                 name="imagenes_url"
                 children={(field) => (
-                  <ImageUploader
+                  <SharedImageUploader
+                    mode="multiple"
                     urls={field.state.value ?? []}
                     onChange={(urls) => field.handleChange(urls)}
                   />

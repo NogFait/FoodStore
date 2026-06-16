@@ -19,10 +19,4 @@ export interface Producto {
   ingredientes: ProductoIngrediente[];
 }
 
-export interface UploadResult {
-  url: string;
-  public_id: string;
-  width: number;
-  height: number;
-  format: string;
-}
+export type { UploadResult } from "../../types/upload";
