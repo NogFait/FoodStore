@@ -15,10 +15,19 @@ export function getPedidoById(id: number) {
   return api.get<PedidoResponse>(`/pedidos/${id}`).then((r) => r.data);
 }
 
-export function avanzarEstado(id: number) {
-  return api.patch<PedidoResponse>(`/pedidos/${id}/avanzar`).then((r) => r.data);
+export interface AvanzarEstadoPayload {
+  nuevo_estado?: string;
+  motivo?: string;
 }
 
-export function cancelarPedido(id: number) {
-  return api.patch<PedidoResponse>(`/pedidos/${id}/cancelar`).then((r) => r.data);
+export function avanzarEstado(id: number, payload?: AvanzarEstadoPayload) {
+  return api
+    .patch<PedidoResponse>(`/pedidos/${id}/avanzar`, payload ?? {})
+    .then((r) => r.data);
+}
+
+export function cancelarPedido(id: number, motivo: string) {
+  return api
+    .delete<PedidoResponse>(`/pedidos/${id}`, { data: { motivo } })
+    .then((r) => r.data);
 }

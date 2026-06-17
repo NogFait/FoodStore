@@ -1,7 +1,8 @@
 import { Navigate } from "react-router-dom";
-import { useIsAuthenticated } from "../hooks/useAuth";
+import { useAuth, useIsAuthenticated } from "../hooks/useAuth";
 import {Outlet} from "react-router-dom";
 import { Spinner } from "../../../components/ui/Spinner";
+import { rutaInicialParaRoles } from "../landing";
 
 export function ProtectedRoute() {
   const { isAuthenticated, isLoading } = useIsAuthenticated();
@@ -14,10 +15,10 @@ export function ProtectedRoute() {
 }
 
 export function PublicRoute() {
-  const { isAuthenticated, isLoading } = useIsAuthenticated();
+  const { user, isLoading } = useAuth();
   if (isLoading) return <Spinner />;
-  // Si el usuario ya está autenticado, lo redirigimos al panel de admin, sino lo dejamos acceder a las rutas públicas como login o register
-  if (isAuthenticated) return <Navigate to="/categorias" replace />;
+  // Si el usuario ya está autenticado, lo redirigimos según su rol; sino accede a login/register.
+  if (user) return <Navigate to={rutaInicialParaRoles(user.roles)} replace />;
   return <Outlet />;
 }
 

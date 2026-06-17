@@ -4,8 +4,8 @@ import CategoriaModal from "../components/CategoriaModal";
 import CategoriaDetailModal from "../components/CategoriaDetailModal";
 import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
 import type { Categoria } from "../types";
-import { useAuth } from "../../auth/hooks/useAuth";
 import { useCategoria } from "../hooks/useCategoria";
+import { useRole } from "../../../hooks/useRole";
 type ModalState =
   | { type: "none" }
   | { type: "create" }
@@ -15,8 +15,7 @@ type ModalState =
 
 const CategoriasPage = () => {
   const [modal, setModal] = useState<ModalState>({ type: "none" });
-  const { user } = useAuth();
-  const isAdmin = user?.roles?.includes("ADMIN") ?? false;
+  const { isAdmin } = useRole();
 
   const crud = useCategoria();
 

@@ -1,4 +1,5 @@
 import { useCategoriaForm } from "../hooks/useCategoriaForm";
+import { SharedImageUploader } from "../../../components/ui/SharedImageUploader";
 import type { Categoria } from "../types";
 
 type CategoriaModalProps = {
@@ -81,15 +82,14 @@ const CategoriaModal = ({ categoria, onClose, onSubmit, categorias }: CategoriaM
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">URL de Imagen</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Imagen</label>
               <form.Field
                 name="imagen_url"
                 children={(field) => (
-                  <input
-                    type="text"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  <SharedImageUploader
+                    mode="single"
+                    url={field.state.value ?? ""}
+                    onChange={(url) => field.handleChange(url)}
                   />
                 )}
               />

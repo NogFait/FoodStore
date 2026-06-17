@@ -18,6 +18,7 @@ export function useIngredienteForm(
         nombre: value.nombre,
         descripcion: value.descripcion,
         es_alergeno: value.es_alergeno,
+        stock_cantidad: ingrediente?.stock_cantidad ?? 0,
       });
     },
   });

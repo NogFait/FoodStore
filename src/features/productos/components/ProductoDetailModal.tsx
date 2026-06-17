@@ -97,16 +97,19 @@ const ProductoDetailModal = ({
           </div>
         )}
 
-        {producto.imagenes_url && (
-          <div className="w-full h-40 sm:h-48 bg-gray-100 flex items-center justify-center flex-shrink-0">
-            <img
-              src={producto.imagenes_url}
-              alt={producto.nombre}
-              className="max-w-full max-h-full object-contain"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
-            />
+        {producto.imagenes_url && producto.imagenes_url.length > 0 && (
+          <div className="w-full h-40 sm:h-48 bg-gray-100 flex items-center justify-center gap-2 flex-shrink-0 overflow-x-auto px-2">
+            {producto.imagenes_url.map((url, i) => (
+              <img
+                key={i}
+                src={url}
+                alt={`${producto.nombre} ${i + 1}`}
+                className="max-h-full object-contain rounded"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+            ))}
           </div>
         )}
 

@@ -1,6 +1,8 @@
 import { useForm } from "@tanstack/react-form";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { useAuthStore } from "../../../store/authStore";
+import { rutaInicialParaRoles } from "../landing";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -13,7 +15,8 @@ const Login = () => {
     },
     onSubmit: async ({ value }) => {
       await login(value);
-      navigate("/categorias");
+      // El login ya pobló el usuario en el store; rutea según su rol.
+      navigate(rutaInicialParaRoles(useAuthStore.getState().user?.roles));
     },
   });
 

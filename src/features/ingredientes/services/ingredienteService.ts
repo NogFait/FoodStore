@@ -20,3 +20,12 @@ export function updateIngrediente(id: number, data: Partial<Ingrediente>): Promi
 export function deleteIngrediente(id: number): Promise<void> {
   return api.delete(`/ingredientes/${id}`);
 }
+
+export function ajustarStock(
+  id: number,
+  stock_cantidad: number,
+): Promise<Ingrediente> {
+  return api
+    .patch<Ingrediente>(`/ingredientes/${id}/stock`, { stock_cantidad })
+    .then((r) => r.data);
+}

@@ -5,7 +5,7 @@ import UnidadMedidaModal from "../components/UnidadMedidaModal";
 import UnidadMedidaDetailModal from "../components/UnidadMedidaDetailModal";
 import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
 import type { UnidadMedida } from "../types";
-import { useAuth } from "../../auth/hooks/useAuth";
+import { useRole } from "../../../hooks/useRole";
 import {
   getUnidadesMedida,
   createUnidadMedida,
@@ -22,8 +22,7 @@ type ModalState =
 
 const UnidadesMedidaPage = () => {
   const [modal, setModal] = useState<ModalState>({ type: "none" });
-  const { user } = useAuth();
-  const isAdmin = user?.roles?.includes("ADMIN") ?? false;
+  const { isAdmin } = useRole();
 
   const crud = useCrudOperations<UnidadMedida>(
     ["unidades-medida"],
@@ -191,7 +190,7 @@ const UnidadesMedidaPage = () => {
           unidad={null}
           onClose={handleCloseModal}
           onSubmit={(data) =>
-            crud.createMutation.mutate(data as any, {
+            crud.createMutation.mutate(data as Record<string, unknown>, {
               onSuccess: () => setModal({ type: "none" }),
             })
           }
@@ -204,7 +203,7 @@ const UnidadesMedidaPage = () => {
           onClose={handleCloseModal}
           onSubmit={(data) =>
             crud.updateMutation.mutate(
-              { id: modal.unidad.id, data: data as any },
+              { id: modal.unidad.id, data: data as Record<string, unknown> },
               { onSuccess: () => setModal({ type: "none" }) },
             )
           }

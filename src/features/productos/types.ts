@@ -10,7 +10,7 @@ export interface Producto {
   nombre: string;
   descripcion: string;
   precio_base: number;
-  imagenes_url?: string | null;
+  imagenes_url?: string[] | null;
   stock_cantidad: number;
   disponible: boolean;
   unidad_venta_id?: number;
@@ -18,3 +18,5 @@ export interface Producto {
   ingredientes_ids: number[];
   ingredientes: ProductoIngrediente[];
 }
+
+export type { UploadResult } from "../../types/upload";

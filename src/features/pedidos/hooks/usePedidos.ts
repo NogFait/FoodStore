@@ -31,7 +31,7 @@ export function usePedidos() {
   };
 
   const avanzarMutation = useMutation({
-    mutationFn: pedidoService.avanzarEstado,
+    mutationFn: (id: number) => pedidoService.avanzarEstado(id),
     onSuccess: (pedido) => {
       toast.success(`Pedido #${pedido.id} → ${pedido.estado_pedido.nombre}`);
       invalidate();
@@ -39,7 +39,8 @@ export function usePedidos() {
   });
 
   const cancelarMutation = useMutation({
-    mutationFn: pedidoService.cancelarPedido,
+    mutationFn: ({ id, motivo }: { id: number; motivo: string }) =>
+      pedidoService.cancelarPedido(id, motivo),
     onSuccess: (pedido) => {
       toast.success(`Pedido #${pedido.id} cancelado`);
       invalidate();

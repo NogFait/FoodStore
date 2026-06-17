@@ -2,6 +2,11 @@
 
 Frontend de administración del sistema FoodStore. App interna para gestión de productos, categorías, ingredientes y pedidos.
 
+
+# Link al video
+[![Video de presentación](https://img.youtube.com/vi/00k1g5J8X4/0.jpg)](https://youtu.be/9mZBAH2CmGo)
+
+
 ## Tecnologías
 
 - **React 19**: Biblioteca para interfaces de usuario

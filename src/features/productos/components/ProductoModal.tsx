@@ -5,6 +5,7 @@ import type { Producto } from "../types";
 import type { Categoria } from "../../categorias/types";
 import type { Ingrediente } from "../../ingredientes/types";
 import type { UnidadMedida } from "../../unidades-medida/types";
+import { SharedImageUploader } from "../../../components/ui/SharedImageUploader";
 
 type ProductoModalProps = {
   isOpen: boolean;
@@ -210,51 +211,15 @@ const ProductoModal = ({ isOpen, producto, onClose, onSubmit, categorias, ingred
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Imagen</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Imágenes</label>
               <form.Field
                 name="imagenes_url"
                 children={(field) => (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        id="image-upload"
-                        className="hidden"
-                        onChange={(e) => handleImageUpload(e, (url) => field.handleChange(url))}
-                      />
-                      <label
-                        htmlFor="image-upload"
-                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg cursor-pointer hover:bg-indigo-700 transition-colors text-sm font-medium"
-                      >
-                        {uploading ? "Subiendo..." : "Subir imagen"}
-                      </label>
-                      {field.state.value && (
-                        <button
-                          type="button"
-                          onClick={() => field.handleChange("")}
-                          className="text-sm text-red-600 hover:text-red-800 font-medium"
-                        >
-                          Quitar
-                        </button>
-                      )}
-                    </div>
-
-                    {uploading && (
-                      <div className="text-sm text-gray-500 animate-pulse">
-                        Subiendo imagen a Cloudinary...
-                      </div>
-                    )}
-
-                    {field.state.value && !uploading && (
-                      <img
-                        src={field.state.value}
-                        alt="Preview"
-                        className="w-32 h-32 object-cover rounded-lg border border-gray-200 shadow-sm"
-                        onError={() => field.handleChange("")}
-                      />
-                    )}
-                  </div>
+                  <SharedImageUploader
+                    mode="multiple"
+                    urls={field.state.value ?? []}
+                    onChange={(urls) => field.handleChange(urls)}
+                  />
                 )}
               />
             </div>

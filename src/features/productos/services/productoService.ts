@@ -1,6 +1,18 @@
 import api from "../../../api/api";
 import type { Producto } from "../types";
 
+export interface ProductoIngrediente {
+  ingrediente_id: number;
+  nombre: string;
+  stock_cantidad: number;
+  es_removible: boolean;
+}
+
+export const getIngredientesProducto = async (productoId: number): Promise<ProductoIngrediente[]> => {
+  const { data } = await api.get(`/productos/${productoId}/ingredientes`);
+  return data;
+};
+
 export function getProductos(params?: Record<string, string | number | boolean | undefined>) {
   return api.get<Producto[]>("/productos/", { params }).then((r) => r.data);
 }
