@@ -57,6 +57,20 @@ const ProductoList = ({
         accessorKey: "stock_cantidad",
       },
       {
+        header: "Disponible",
+        accessorKey: "disponible",
+        cell: ({ row }: { row: { original: Producto } }) =>
+          row.original.disponible ? (
+            <span className="px-3 py-1 text-xs font-semibold bg-green-100 text-green-700 rounded-full">
+              Sí
+            </span>
+          ) : (
+            <span className="px-3 py-1 text-xs font-semibold bg-red-100 text-red-700 rounded-full">
+              No
+            </span>
+          ),
+      },
+      {
         header: "Acciones",
         cell: ({ row }: { row: { original: Producto } }) => (
           <div className="flex gap-2">

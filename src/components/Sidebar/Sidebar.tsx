@@ -5,40 +5,41 @@ import { useRole } from "../../hooks/useRole";
 interface NavItem {
   path: string;
   label: string;
+  visible: boolean;
 }
 
 interface NavGroup {
   group: string;
   items: NavItem[];
-  visible: boolean;
 }
 
 const Sidebar = () => {
   const location = useLocation();
-  const { isAdmin, can } = useRole();
+  const { isAdmin, canStock, can } = useRole();
 
+  // Visibilidad por ítem; un grupo se muestra si tiene al menos un ítem visible.
   const groups: NavGroup[] = [
     {
       group: "Operación",
-      visible: can("ver-pedidos"),
-      items: [{ path: "/pedidos", label: "Pedidos" }],
+      items: [
+        { path: "/pedidos", label: "Pedidos", visible: can("ver-pedidos") },
+        // Ingredientes (stock) es operativo: lo gestionan ADMIN, CAJA y COCINA.
+        { path: "/ingredientes", label: "Ingredientes", visible: canStock },
+      ],
     },
     {
       group: "Catálogo",
-      visible: isAdmin,
       items: [
-        { path: "/productos", label: "Productos" },
-        { path: "/categorias", label: "Categorías" },
-        { path: "/ingredientes", label: "Ingredientes" },
-        { path: "/unidades-medida", label: "Unidades de medida" },
+        { path: "/productos", label: "Productos", visible: isAdmin },
+        { path: "/categorias", label: "Categorías", visible: isAdmin },
+        { path: "/unidades-medida", label: "Unidades de medida", visible: isAdmin },
       ],
     },
     {
       group: "Administración",
-      visible: isAdmin,
       items: [
-        { path: "/usuarios", label: "Usuarios" },
-        { path: "/dashboard", label: "Dashboard" },
+        { path: "/usuarios", label: "Usuarios", visible: isAdmin },
+        { path: "/dashboard", label: "Dashboard", visible: isAdmin },
       ],
     },
   ];
@@ -57,7 +58,9 @@ const Sidebar = () => {
     });
   };
 
-  const visibleGroups = groups.filter((g) => g.visible);
+  const visibleGroups = groups
+    .map((g) => ({ ...g, items: g.items.filter((i) => i.visible) }))
+    .filter((g) => g.items.length > 0);
 
   return (
     <aside className="w-56 bg-white border-r border-gray-200 min-h-[calc(100vh-4rem)] flex-shrink-0">

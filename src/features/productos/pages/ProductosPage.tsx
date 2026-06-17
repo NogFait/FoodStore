@@ -144,8 +144,8 @@ const ProductosPage = () => {
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
             >
               <option value="">Todos</option>
-              <option value="true">Con stock</option>
-              <option value="false">Sin stock</option>
+              <option value="true">Disponible</option>
+              <option value="false">No disponible</option>
             </select>
           </div>
 
