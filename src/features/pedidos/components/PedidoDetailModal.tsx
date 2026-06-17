@@ -1,5 +1,11 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import EstadoPedidoBadge from "./EstadoPedidoBadge";
 import { usePedidoDetalle } from "../hooks/usePedidos";
+import { getIngredientesProducto } from "../../productos/services/productoService";
+import type { ProductoIngrediente } from "../../productos/services/productoService";
+import { ajustarStock } from "../../ingredientes/services/ingredienteService";
+import { useRole } from "../../../hooks/useRole";
 
 type Props = {
   pedidoId: number;
@@ -7,6 +13,84 @@ type Props = {
   onAvanzar: (id: number) => void;
   onCancelar: (id: number) => void;
   isMutating: boolean;
+};
+
+type ProductoIngredientesRowProps = {
+  productoId: number;
+  pedidoId: number;
+};
+
+const ProductoIngredientesRow = ({ productoId, pedidoId }: ProductoIngredientesRowProps) => {
+  const { canStock } = useRole();
+  const queryClient = useQueryClient();
+
+  const { data: ingredientes, isLoading } = useQuery({
+    queryKey: ["producto-ingredientes", productoId],
+    queryFn: () => getIngredientesProducto(productoId),
+  });
+
+  const marcarFaltante = useMutation({
+    mutationFn: (ingredienteId: number) => ajustarStock(ingredienteId, 0),
+    onSuccess: () => {
+      toast.success("Ingrediente marcado como faltante");
+      void queryClient.invalidateQueries({ queryKey: ["producto-ingredientes", productoId] });
+      void queryClient.invalidateQueries({ queryKey: ["ingredientes"] });
+      void queryClient.invalidateQueries({ queryKey: ["productos"] });
+      void queryClient.invalidateQueries({ queryKey: ["pedido", pedidoId] });
+      void queryClient.invalidateQueries({ queryKey: ["pedidos"] });
+    },
+    onError: () => {
+      toast.error("No se pudo marcar el ingrediente como faltante");
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="mt-1 px-2 py-1 text-xs text-gray-400">Cargando ingredientes…</div>
+    );
+  }
+
+  if (!ingredientes || ingredientes.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mt-2 px-2 space-y-1">
+      {ingredientes.map((ing: ProductoIngrediente) => (
+        <div
+          key={ing.ingrediente_id}
+          className="flex items-center justify-between gap-2 py-1 border-b border-gray-100 last:border-0"
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-xs text-gray-700 truncate">{ing.nombre}</span>
+            {ing.es_removible && (
+              <span className="text-xs text-gray-400 italic">Removible</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {ing.stock_cantidad === 0 ? (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                Faltante
+              </span>
+            ) : (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                {ing.stock_cantidad}
+              </span>
+            )}
+            {canStock && ing.stock_cantidad > 0 && (
+              <button
+                onClick={() => marcarFaltante.mutate(ing.ingrediente_id)}
+                disabled={marcarFaltante.isPending}
+                className="px-2 py-0.5 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors disabled:opacity-50"
+              >
+                Marcar faltante
+              </button>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 };
 
 const fmtMoney = (v: string) =>
@@ -149,22 +233,28 @@ const PedidoDetailModal = ({
                   {pedido.detalles.map((d) => (
                     <div
                       key={d.producto_id}
-                      className="flex items-center justify-between px-3 py-2 bg-white rounded-lg border border-gray-200"
+                      className="px-3 py-2 bg-white rounded-lg border border-gray-200"
                     >
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {d.nombre_snap}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {d.cantidad} ×{" "}
-                          {fmtMoney(d.precio_unit_snap)}
-                          {d.personalizacion.length > 0 &&
-                            ` · ${d.personalizacion.length} personalización(es)`}
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {d.nombre_snap}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {d.cantidad} ×{" "}
+                            {fmtMoney(d.precio_unit_snap)}
+                            {d.personalizacion.length > 0 &&
+                              ` · ${d.personalizacion.length} personalización(es)`}
+                          </p>
+                        </div>
+                        <p className="text-sm font-semibold text-gray-900 whitespace-nowrap ml-3">
+                          {fmtMoney(d.subtotal_snap)}
                         </p>
                       </div>
-                      <p className="text-sm font-semibold text-gray-900 whitespace-nowrap ml-3">
-                        {fmtMoney(d.subtotal_snap)}
-                      </p>
+                      <ProductoIngredientesRow
+                        productoId={d.producto_id}
+                        pedidoId={pedido.id}
+                      />
                     </div>
                   ))}
                 </div>

@@ -13,6 +13,8 @@ export function useRole() {
   const isCaja = roles.includes("CAJA");
   const isClient = roles.includes("CLIENT");
 
+  const canStock = isAdmin || isCaja || isCocina;
+
   /**
    * `can` helper — role-gate for UI actions.
    * Currently maps to simple role membership; can be extended with
@@ -33,5 +35,5 @@ export function useRole() {
     }
   }
 
-  return { isAdmin, isCocina, isCaja, isClient, can };
+  return { isAdmin, isCocina, isCaja, isClient, canStock, can };
 }

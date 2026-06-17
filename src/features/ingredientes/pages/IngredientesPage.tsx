@@ -22,8 +22,7 @@ type ModalState =
 
 const IngredientesPage = () => {
   const [modal, setModal] = useState<ModalState>({ type: "none" });
-  const { isAdmin, isCaja } = useRole();
-  const canStock = isAdmin || isCaja;
+  const { isAdmin, canStock } = useRole();
 
   const crud = useIngredientes();
   const queryClient = useQueryClient();
