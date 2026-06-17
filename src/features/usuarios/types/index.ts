@@ -19,3 +19,11 @@ export interface UserRolAssign {
   rol_codigo: Role;
   expires_at?: string | null;
 }
+
+export interface AdminUserCreate {
+  username: string;
+  full_name: string;
+  email: string;
+  password: string;
+  roles: Role[];
+}

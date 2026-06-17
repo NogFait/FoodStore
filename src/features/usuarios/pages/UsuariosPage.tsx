@@ -31,6 +31,22 @@ type RolModalState =
   | { type: "assign"; usuario: UsuarioPublico }
   | { type: "remove"; usuario: UsuarioPublico; rol: Role };
 
+interface NuevoUsuarioForm {
+  username: string;
+  full_name: string;
+  email: string;
+  password: string;
+  roles: Role[];
+}
+
+const EMPTY_FORM: NuevoUsuarioForm = {
+  username: "",
+  full_name: "",
+  email: "",
+  password: "",
+  roles: ["CLIENT"],
+};
+
 const UsuariosPage = () => {
   const queryClient = useQueryClient();
   const { data: usuarios, isLoading, error, refetch } = useUsuarios();
@@ -38,6 +54,11 @@ const UsuariosPage = () => {
 
   const [rolModal, setRolModal] = useState<RolModalState>({ type: "none" });
   const [selectedRol, setSelectedRol] = useState<Role>("CLIENT");
+
+  // New-user modal state
+  const [showNuevoModal, setShowNuevoModal] = useState(false);
+  const [nuevoForm, setNuevoForm] = useState<NuevoUsuarioForm>(EMPTY_FORM);
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof NuevoUsuarioForm, string>>>({});
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -79,10 +100,66 @@ const UsuariosPage = () => {
     onError: () => toast.error("No se pudo remover el rol"),
   });
 
+  const crearUsuarioMutation = useMutation({
+    mutationFn: usuariosService.crearUsuario,
+    onSuccess: (created) => {
+      toast.success(`Usuario ${created.username} creado correctamente`);
+      invalidate();
+      setShowNuevoModal(false);
+      setNuevoForm(EMPTY_FORM);
+      setFormErrors({});
+    },
+    onError: (err: unknown) => {
+      const msg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
+        "No se pudo crear el usuario";
+      toast.error(msg);
+    },
+  });
+
   const isMutating =
     toggleEstadoMutation.isPending ||
     asignarRolMutation.isPending ||
     quitarRolMutation.isPending;
+
+  // ── nuevo usuario form helpers ─────────────────────────────────────────────
+
+  const handleNuevoField = (field: keyof NuevoUsuarioForm, value: string) => {
+    setNuevoForm((prev) => ({ ...prev, [field]: value }));
+    setFormErrors((prev) => ({ ...prev, [field]: undefined }));
+  };
+
+  const handleRolToggle = (rol: Role) => {
+    setNuevoForm((prev) => {
+      const has = prev.roles.includes(rol);
+      const next = has ? prev.roles.filter((r) => r !== rol) : [...prev.roles, rol];
+      return { ...prev, roles: next };
+    });
+    setFormErrors((prev) => ({ ...prev, roles: undefined }));
+  };
+
+  const validateNuevoForm = (): boolean => {
+    const errors: Partial<Record<keyof NuevoUsuarioForm, string>> = {};
+    if (!nuevoForm.username.trim()) errors.username = "Requerido";
+    if (!nuevoForm.full_name.trim()) errors.full_name = "Requerido";
+    if (!nuevoForm.email.trim()) errors.email = "Requerido";
+    if (!nuevoForm.password) errors.password = "Requerido";
+    else if (nuevoForm.password.length < 8) errors.password = "Mínimo 8 caracteres";
+    if (nuevoForm.roles.length === 0) errors.roles = "Seleccioná al menos un rol";
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleNuevoSubmit = () => {
+    if (!validateNuevoForm()) return;
+    crearUsuarioMutation.mutate(nuevoForm);
+  };
+
+  const handleCloseNuevoModal = () => {
+    setShowNuevoModal(false);
+    setNuevoForm(EMPTY_FORM);
+    setFormErrors({});
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -94,12 +171,20 @@ const UsuariosPage = () => {
               Gestión de usuarios y asignación de roles
             </p>
           </div>
-          <button
-            onClick={() => refetch()}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
-          >
-            Refrescar
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowNuevoModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Nuevo usuario
+            </button>
+            <button
+              onClick={() => refetch()}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              Refrescar
+            </button>
+          </div>
         </div>
 
         {isLoading && (
@@ -209,6 +294,128 @@ const UsuariosPage = () => {
           </div>
         )}
       </div>
+
+      {/* Nuevo usuario modal */}
+      {showNuevoModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+            <div className="p-6 space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900">Nuevo usuario</h3>
+
+              {/* Username */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  value={nuevoForm.username}
+                  onChange={(e) => handleNuevoField("username", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                  placeholder="johndoe"
+                />
+                {formErrors.username && (
+                  <p className="text-xs text-red-600 mt-1">{formErrors.username}</p>
+                )}
+              </div>
+
+              {/* Full name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nombre completo
+                </label>
+                <input
+                  type="text"
+                  value={nuevoForm.full_name}
+                  onChange={(e) => handleNuevoField("full_name", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                  placeholder="John Doe"
+                />
+                {formErrors.full_name && (
+                  <p className="text-xs text-red-600 mt-1">{formErrors.full_name}</p>
+                )}
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={nuevoForm.email}
+                  onChange={(e) => handleNuevoField("email", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                  placeholder="john@mail.com"
+                />
+                {formErrors.email && (
+                  <p className="text-xs text-red-600 mt-1">{formErrors.email}</p>
+                )}
+              </div>
+
+              {/* Password */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Contraseña
+                </label>
+                <input
+                  type="password"
+                  value={nuevoForm.password}
+                  onChange={(e) => handleNuevoField("password", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                  placeholder="Mínimo 8 caracteres"
+                />
+                {formErrors.password && (
+                  <p className="text-xs text-red-600 mt-1">{formErrors.password}</p>
+                )}
+              </div>
+
+              {/* Roles checkboxes */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Roles
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  {ALL_ROLES.map((rol) => (
+                    <label
+                      key={rol}
+                      className="flex items-center gap-2 cursor-pointer select-none"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={nuevoForm.roles.includes(rol)}
+                        onChange={() => handleRolToggle(rol)}
+                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span className="text-sm text-gray-700">{rol}</span>
+                    </label>
+                  ))}
+                </div>
+                {formErrors.roles && (
+                  <p className="text-xs text-red-600 mt-1">{formErrors.roles}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex border-t border-gray-200">
+              <button
+                onClick={handleCloseNuevoModal}
+                disabled={crearUsuarioMutation.isPending}
+                className="flex-1 py-3 text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                disabled={crearUsuarioMutation.isPending}
+                onClick={handleNuevoSubmit}
+                className="flex-1 py-3 text-green-600 font-medium border-l border-gray-200 hover:bg-green-50 transition-colors disabled:opacity-50"
+              >
+                {crearUsuarioMutation.isPending ? "Creando…" : "Crear"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Assign role modal */}
       {rolModal.type === "assign" && (

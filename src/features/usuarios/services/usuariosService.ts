@@ -1,5 +1,5 @@
 import api from "../../../api/api";
-import type { RolPublic, UsuarioPublico, UserRolAssign } from "../types";
+import type { AdminUserCreate, RolPublic, UsuarioPublico, UserRolAssign } from "../types";
 import type { Role } from "../../auth/types";
 
 /**
@@ -44,4 +44,11 @@ export function quitarRol(userId: number, rolCodigo: Role): Promise<UsuarioPubli
   return api
     .delete<UsuarioPublico>(`/admin/usuarios/${userId}/roles/${rolCodigo}`)
     .then((r) => r.data);
+}
+
+/**
+ * POST /api/v1/admin/usuarios — create a user with roles (admin only)
+ */
+export function crearUsuario(payload: AdminUserCreate): Promise<UsuarioPublico> {
+  return api.post<UsuarioPublico>("/admin/usuarios", payload).then((r) => r.data);
 }
