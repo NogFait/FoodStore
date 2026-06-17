@@ -13,15 +13,16 @@ import {
   ProtectedRoute,
   PublicRoute,
 } from "../features/auth/components/ProtectedRoute";
-import { useIsAuthenticated } from "../features/auth/hooks/useAuth";
+import { useAuth } from "../features/auth/hooks/useAuth";
+import { rutaInicialParaRoles } from "../features/auth/landing";
 import { FullScreenSpinner } from "../components/ui/Spinner";
 import AdminLayout from "../components/layout/AdminLayout";
 
-//fx para que verifique si hay usuario logueado, si no encuentra pal login, si encuentra al panel del admin
+//fx para que verifique si hay usuario logueado, si no encuentra pal login, si encuentra al panel del admin segun su rol
 function RootRedirect() {
-  const { isAuthenticated, isLoading } = useIsAuthenticated();
+  const { user, isLoading } = useAuth();
   if (isLoading) return <FullScreenSpinner />;
-  return <Navigate to={isAuthenticated ? "/categorias" : "/login"} replace />;
+  return <Navigate to={user ? rutaInicialParaRoles(user.roles) : "/login"} replace />;
 }
 
 const AppRouter = () => {
